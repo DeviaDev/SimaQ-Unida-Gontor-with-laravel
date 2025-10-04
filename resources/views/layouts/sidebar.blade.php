@@ -50,16 +50,16 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Data Screens:</h6>
-                        <a class="collapse-item {{ $menuPengurus ?? ''}}"   href="{{ route('pengurus') }} ">Data Pengurus</a>
-                        <a class="collapse-item" href="mahasiswi.html">Data Mahasiswi</a>
-                        <a class="collapse-item" href="muhafizoh.html">Data Muhafizoh</a>
-                        <a class="collapse-item" href="dosen.html">Data Dosen Pembimbing</a>
+                        <a class="collapse-item {{ $menuPengurus ?? ''}}"   href="{{ route('pengurus') }} "> Data Pengurus</a>
+                        <a class="collapse-item {{ $menuMahasiswi ?? ''}}"  href="{{ route('mahasiswi') }}"> Data Mahasiswi</a>
+                        <a class="collapse-item {{ $menuMuhafidzoh ?? ''}}" href="{{ route('muhafidzoh') }}">Data Muhafizoh</a>
+                        <a class="collapse-item {{ $menuDosen ?? ''}}"      href="{{ route('dosen') }}">     Data Dosen Pembimbing</a>
                     </div>
                 </div>
             </li>
 
             <!-- Nav Item - Pages Collapse Menu -->
-            <li class="nav-item">
+            <li class="nav-item {{ $menuAbsensiAnggota ?? '' }}">
     <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
         <i class="fas fa-fw fa-clipboard-list"></i>
         <span>Absensi Anggota</span>
@@ -69,31 +69,31 @@
             <h6 class="collapse-header">Kegiatan:</h6>
 
             <!-- Tahfidz trigger -->
-            <a class="collapse-item collapsed" href="#" data-toggle="collapse" data-target="#collapseTahfidz"
+            <a class="collapse-item collapsed {{ $menuAbsensiTahfidz ?? '' }}" href="#" data-toggle="collapse" data-target="#collapseTahfidz"
                 aria-expanded="false" aria-controls="collapseTahfidz">
                 Tahfidz
             </a>
             <!-- Tahfidz submenu -->
             <div id="collapseTahfidz" class="collapse" aria-labelledby="headingTahfidz" data-parent="#collapseTwo">
-                <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item" href="hafalan.html">Mahasiswi</a>
-                <a class="collapse-item" href="murajaah.html">Muhafizoh</a>
-                </div>  
+    <div class="bg-white py-2 collapse-inner rounded">
+        <a class="collapse-item {{ $tahfidzmahasiswi ?? ''}}" href="{{ route('absensiTahfidzMahasiswi') }}">Mahasiswi</a>
+        <a class="collapse-item {{ $tahfidzmuhafidzoh ?? '' }}" href="{{ route('absensiTahfidzMuhafidzoh') }}">Muhafidzoh</a>
+    </div>  
             </div>
 
             <!-- Tahsin trigger -->
-            <a class="collapse-item collapsed" href="#" data-toggle="collapse" data-target="#collapseTahsin"
+            <a class="collapse-item collapsed {{ $menuAbsensiTilawah ?? '' }}" href="#" data-toggle="collapse" data-target="#collapseTahsin"
                 aria-expanded="false" aria-controls="collapseTahsin">
                 Tilawah
             </a>
+            <!-- Tilawah submenu -->
             <div id="collapseTahsin" class="collapse" aria-labelledby="headingTahsin" data-parent="#collapseTwo">
-
-                <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="tajwid.html">Mahasiswi</a>
-                <a class="collapse-item" href="makhraj.html">Muhafizoh</a>
-                <a class="collapse-item" href="makhraj.html">Staf/Tendik</a>
-                <a class="collapse-item" href="makhraj.html">Dosen</a>
-                </div>
+    <div class="bg-white py-2 collapse-inner rounded">
+        <a class="collapse-item {{ $tilawahmahasiswi ?? '' }}" href="{{ route('absensiTilawahMahasiswi') }}">Mahasiswi</a>
+        <a class="collapse-item {{ $tilawahmuhafidzoh ?? '' }}" href="{{ route('absensiTilawahMuhafidzoh') }}">Muhafidzoh</a>
+        <a class="collapse-item {{ $tilawahstaf ?? '' }}" href="{{ route('absensiTilawahStaf') }}">Staf/Tendik</a>
+        <a class="collapse-item {{ $tilawahdosen ?? '' }}" href="{{ route('absensiTilawahDosen') }}">Dosen</a>
+    </div>
             </div>
 
         </div>
@@ -102,7 +102,7 @@
 
 
             <!-- Nav Item - Utilities Collapse Menu -->
-            <li class="nav-item">
+            <li class="nav-item {{ $menuAbsensiPengurus ?? ''}}">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
                     aria-expanded="true" aria-controls="collapseUtilities">
                     <i class="fas fa-fw fa-clipboard-list"></i>
@@ -112,44 +112,40 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Kegiatan:</h6>
-                        <a class="collapse-item" href="utilities-color.html">Malam Lailatu Tahfidz</a>
-                        <a class="collapse-item" href="utilities-border.html">Tilawah</a>
-                        <a class="collapse-item" href="utilities-animation.html">Taujihat</a>
+                        <a class="collapse-item {{ $pengurusLailatu ?? ''}}" href="{{ route('pengurusLailatu') }}">Malam Lailatu Tahfidz</a>
+                        <a class="collapse-item {{ $pengurusTilawah ?? ''}}" href="{{ route('pengurusTilawah') }}">Tilawah</a>
+                        <a class="collapse-item {{ $pengurusTaujihat ?? ''}}" href="{{ route('pengurusTaujihat') }}">Taujihat</a>
+
+
                     </div>
                 </div>
             </li>
 
 
 
-             <li class="nav-item">
-  <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUjian"
-      aria-expanded="true" aria-controls="collapseUjian">
-      <i class="fas fa-fw fa-list"></i>
-      <span>Ujian</span>
-  </a>
-  <div id="collapseUjian" class="collapse" aria-labelledby="headingUjian" data-parent="#accordionSidebar">
-      <div class="bg-white py-2 collapse-inner rounded">
+            <li class="nav-item {{ $menuUjian ?? '' }}">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUjian"
+                aria-expanded="true" aria-controls="collapseUjian">
+            <i class="fas fa-fw fa-list"></i>
+            <span>Ujian</span>
+            </a>
+            <div id="collapseUjian" class="collapse" aria-labelledby="headingUjian" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
           <h6 class="collapse-header">Nilai:</h6>
 
           <!-- Submenu Ujian Tahfidz -->
-          <a class="collapse-item collapsed" href="#" data-toggle="collapse" data-target="#collapseUjianTahfidz"
+          <a class="collapse-item collapsed {{ $menuUjianTahfidz ?? ''}}" href="#" data-toggle="collapse" data-target="#collapseUjianTahfidz"
               aria-expanded="false" aria-controls="collapseUjianTahfidz">
               Ujian Tahfidz
           </a>
           <div id="collapseUjianTahfidz" class="collapse" aria-labelledby="headingUjianTahfidz" data-parent="#collapseUjian">
               <div class="bg-white py-2 collapse-inner rounded">
-                  <a class="collapse-item" href="hafalan.html">Ujian Mandiri</a>
-                  <a class="collapse-item" href="murajaah.html">Ujian Serentak</a>
-                  <a class="collapse-item" href="murajaah.html">Remedial</a>
+                  <a class="collapse-item {{ $mandiri ?? '' }}" href="{{ route('mandiri') }}">Ujian Mandiri</a>
+                  <a class="collapse-item {{ $serentak ?? '' }}" href="{{ route('serentak') }}">Ujian Serentak</a>
+                  <a class="collapse-item {{ $remedial ?? '' }}" href="{{ route('remedial') }}">Remedial</a>
               </div>
           </div>
-
-          <!-- Submenu Ujian Tahsin -->
-          <a class="collapse-item collapsed" href="#" data-toggle="collapse" data-target="#collapseUjianTahsin"
-              aria-expanded="false" aria-controls="collapseUjianTahsin">
-              Ujian Tahsin
-          </a>
-          
+                    <a class="collapse-item {{ $menutahsin ?? ''}}"   href="{{ route('tahsin') }} ">Ujian Tahsin</a>  
       </div>
   </div>
 </li>
@@ -166,8 +162,8 @@
             </div>
 
             <!-- Nav Item - Charts -->
-            <li class="nav-item">
-                <a class="nav-link" href="charts.html">
+            <li class="nav-item {{ $menuDokumentasi ?? ''}}">
+                <a class="nav-link" href="{{ route('dokumentasi') }}">
                     <i class="fas fa-fw fa-link"></i>
                     <span>Documentation</span></a>
             </li>
