@@ -3,12 +3,12 @@
 @section('content')
      <!-- Page Heading -->
      <h1 class="h3 mb-4 text-gray-800">
-        <i class="fas fa-plus mr-2"></i>
+        <i class="fas fa-edit mr-2"></i>
         {{ $title }}
     </h1>
 
     <div class="card">
-        <div class="card-header bg-primary d-flex flex-wrap justify-content-center justify-content-xl-between">
+        <div class="card-header bg-warning d-flex flex-wrap justify-content-center justify-content-xl-between">
            
                 <div class="mb-1 mr-2">
                 <a href="{{ route('user') }}" class="btn btn-sm btn-success">
@@ -20,13 +20,13 @@
             
         </div>
         <div class="card-body">
-            <form action="{{ route ('userStore') }}" method="post">
+            <form action="{{ route('userUpdate', $user->id) }}" method="POST">
                 @csrf
            <div class="row mb-2">
             <div class="col-xl-6 mb-2">
                 <label class="form-label">
                     <span class="text-danger">*</span> Nama:</label>
-                <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}">
+                <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ $user->name}}">
                 @error('name')
                 <small class="text-danger">{{ $message }}</small>
                 @enderror
@@ -37,7 +37,7 @@
                 <label class="form-label">
                     <span class="text-danger">*</span> Email:</label>
                 <input type="email" name="email" class="form-control @error ('email') is-invalid
-                @enderror" value="{{ old('email') }}">
+                @enderror" value="{{ $user->email}}">
                 @error('email')
                 <small class="text-danger">
                     {{ $message }}
@@ -51,7 +51,7 @@
                 <label class="form-label">
                     <span class="text-danger">*</span> Password:</label>
                 <input type="password" name="password" class="form-control @error ('password') is-invalid
-                @enderror" value="{{ old('password') }}">
+                @enderror" >
                 @error('password')
                 <small class="text-danger">
                     {{ $message }}
@@ -68,8 +68,8 @@
            </div>
 
            <div class="row mb-5 justify-content-center rounded">
-            <button type="submit" class="btn btn-sm btn-primary col-3" href="#">
-                <i class="fas fa-save mr-2"></i>Simpan</button>
+            <button type="submit" class="btn btn-sm btn-warning col-3" href="#">
+                <i class="fas fa-edit mr-2"></i>Edit</button>
         </div>
            
         </form>

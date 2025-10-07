@@ -34,7 +34,21 @@ Route::get('user', [UserController::class,'index'])->name('user');
 
 Route::get('user/create', [UserController::class,'create'])->name('userCreate');
 
+Route::get('/user/edit/{id}', [UserController::class, 'edit'])->name('userEdit');
+
+Route::post('/user/update/{id}', [UserController::class, 'update'])->name('userUpdate');
+
+Route::delete('/user/destroy/{id}', [UserController::class, 'destroy'])->name('userDestroy');
+
 Route::post('user/store', [UserController::class,'store'])->name('userStore');
+
+Route::post('/user/import', [UserController::class, 'importExcel'])->name('userImport');
+
+Route::get('/user/excel', [UserController::class, 'excel'])->name('userExport');
+
+Route::get('/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
+
+
 
 
 
