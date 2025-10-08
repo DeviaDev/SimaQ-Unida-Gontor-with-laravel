@@ -22,14 +22,15 @@
                 </button>
             </form>
 
-            <a href="{{ route('userExport') }}" class="btn btn-sm btn-success">
+            <a href="#" id="exportExcel" class="btn btn-sm btn-success">
             <i class="fas fa-file-excel mr-2"></i> Export Excel
             </a>
 
 
-            <a href="{{ route('userPdf') }}" class="btn btn-sm btn-danger" target="__blank">
-                <i class="fas fa-file-pdf mr-2"></i> Export PDF
+            <a href="#" id="exportPdf" class="btn btn-sm btn-danger">
+            <i class="fas fa-file-pdf mr-2"></i> Export PDF
             </a>
+
         </div>
     </div>
 
@@ -100,16 +101,48 @@
 <!-- Script -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(document).on('click', '.deleteButton', function() {
-    let id = $(this).data('id');
-    let name = $(this).data('name');
-    let email = $(this).data('email');
+$(document).ready(function(){
 
-    $('#deleteForm').attr('action', '/user/destroy/' + id);
-    $('#userInfo').html(`
-        <strong>Nama:</strong> ${name}<br>
-        <strong>Email:</strong> ${email}
-    `);
+    // Tombol hapus
+    $(document).on('click', '.deleteButton', function() {
+        let id = $(this).data('id');
+        let name = $(this).data('name');
+        let email = $(this).data('email');
+
+        $('#deleteForm').attr('action', '/user/destroy/' + id);
+        $('#userInfo').html(`
+            <strong>Nama:</strong> ${name}<br>
+            <strong>Email:</strong> ${email}
+        `);
+    });
+
+    // Tombol export PDF sesuai search
+    $('#exportPdf').on('click', function(e){
+        e.preventDefault();
+        let search = $('input[type="search"]').val(); // ambil dari DataTables search box
+        let url = "{{ route('userPdf') }}";
+
+        if(search) {
+            url += '?search=' + encodeURIComponent(search);
+        }
+
+        window.open(url, '_blank');
+    });
+
+    $('#exportExcel').on('click', function(e){
+    e.preventDefault();
+    let search = $('input[type="search"]').val(); // ambil keyword dari DataTables
+    let url = "{{ route('userExport') }}";
+
+    if(search) {
+        url += '?search=' + encodeURIComponent(search);
+    }
+
+    window.open(url, '_blank');
+});
+
+
 });
 </script>
+
 @endsection

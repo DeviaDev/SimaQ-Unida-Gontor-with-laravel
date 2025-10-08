@@ -111,25 +111,50 @@ class UserController extends Controller
         return redirect()->route('user')->with('success','Data berhasil dihapus');
     }
 
-    public function excel(){
-        $filename = now()->format('d-m-Y H.i.s');
-
-        return Excel::download(new UsersExport, 'DataUser_'.$filename.'.xlsx');
-    }
-
-     public function pdf()
+    public function excel(Request $request)
 {
     $filename = now()->format('d-m-Y_H.i.s');
+    $search = $request->input('search');
 
-    // Ambil semua data user
-    $users = User::all();
+    $query = User::query();
+    if (!empty($search)) {
+        $query->where('name', 'like', "%$search%")
+              ->orWhere('email', 'like', "%$search%");
+    }
 
-    // Kirim data ke view
-    $pdf = Pdf::loadView('admin.user.pdf', compact('users'));
+    $users = $query->get();
 
-    // Set ukuran kertas & arah (landscape)
-    return $pdf->setPaper('a4', 'portrait')->stream('DataUser_' . $filename . '.pdf');
+    return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\UsersExport($users), 'DataUser_'.$filename.'.xlsx');
 }
+
+
+
+
+     public function pdf(Request $request)
+{
+    $filename = now()->format('d-m-Y_H.i.s');
+    $search = $request->input('search');
+
+    // 🔍 Filter pencarian dari input search
+    $query = User::query();
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
+        });
+    }
+
+    $users = $query->get();
+
+    // 🖨️ Generate PDF
+    $pdf = Pdf::loadView('admin.user.pdf', compact('users'))
+        ->setPaper('a4', 'portrait');
+
+    return $pdf->stream('DataUser_' . $filename . '.pdf');
+}
+
+
+
 
 
     

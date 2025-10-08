@@ -46,7 +46,9 @@ Route::post('/user/import', [UserController::class, 'importExcel'])->name('userI
 
 Route::get('/user/excel', [UserController::class, 'excel'])->name('userExport');
 
-Route::get('/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
+Route::get('/admin/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
+
+
 
 
 
@@ -62,6 +64,8 @@ Route::get('mahasiswi', [DataController::class,'mahasiswi'])->name('mahasiswi');
 Route::get('muhafidzoh', [DataController::class,'muhafidzoh'])->name('muhafidzoh');
 
 Route::get('dosen', [DataController::class,'dosen'])->name('dosen');
+
+
 
 
 //absensi Anggota

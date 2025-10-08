@@ -2,17 +2,20 @@
 
 namespace App\Exports;
 
-use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
 
 class UsersExport implements FromView
 {
+    private $users;
+
+    public function __construct($users)
+    {
+        $this->users = $users;
+    }
+
     public function view(): View
     {
-        $data = array(
-            'user'=> User::get(),
-        );
-        return view('admin/user/excel',$data);
+        return view('admin.user.excel', ['users' => $this->users]);
     }
 }
