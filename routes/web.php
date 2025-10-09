@@ -51,9 +51,6 @@ Route::get('/admin/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
 
 
 
-
-
-
 //DATA
 Route::get('index', [DataController::class,'index'])->name('index');
 
@@ -64,6 +61,24 @@ Route::get('mahasiswi', [DataController::class,'mahasiswi'])->name('mahasiswi');
 Route::get('muhafidzoh', [DataController::class,'muhafidzoh'])->name('muhafidzoh');
 
 Route::get('dosen', [DataController::class,'dosen'])->name('dosen');
+
+
+
+
+Route::prefix('data')->group(function () {
+    Route::get('/{type}', [DataController::class, 'index'])->name('data.index');
+    Route::get('/{type}/create', [DataController::class, 'create'])->name('data.create');
+    Route::post('/{type}/store', [DataController::class, 'store'])->name('data.store');
+    Route::get('/{type}/edit/{id}', [DataController::class, 'edit'])->name('data.edit');
+    Route::post('/{type}/update/{id}', [DataController::class, 'update'])->name('data.update');
+    Route::delete('/{type}/destroy/{id}', [DataController::class, 'destroy'])->name('data.destroy');
+
+    // Export & Import
+    Route::get('/{type}/export', [DataController::class, 'exportExcel'])->name('data.export');
+    Route::get('/{type}/pdf', [DataController::class, 'exportPdf'])->name('data.pdf');
+    Route::post('/{type}/import', [DataController::class, 'importExcel'])->name('data.import');
+});
+
 
 
 

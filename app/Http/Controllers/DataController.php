@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dosen;
+use App\Models\Pengurus;
+use App\Models\Mahasiswi;
+use App\Models\Muhafidzoh;
 use Illuminate\Http\Request;
 
 class DataController extends Controller
@@ -9,17 +13,16 @@ class DataController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
+   public function index(){
+        
     }
-
 
     public function pengurus(){
         $data = array(
             'title'         => ' Data Pengurus',
             "menuData"  =>  "active",
             "menuPengurus"  =>  "active",
+            'data'          => Pengurus::all(),
         );
         return view('data/pengurus',$data);
     }
@@ -31,6 +34,8 @@ class DataController extends Controller
             'title'         => ' Data Mahasiswi',
             "menuData"  =>  "active",
             "menuMahasiswi"  =>  "active",
+            'data'          => Mahasiswi::all(),
+            'mahasiswi' => Mahasiswi::with(['dosen', 'muhafidzoh', 'kelompok', 'tempat'])->get(),
         );
         return view('data/mahasiswi',$data);
     }
@@ -42,6 +47,8 @@ class DataController extends Controller
             'title'         => ' Data Muhafidzoh',
             "menuData"  =>  "active",
             "menuMuhafidzoh"  =>  "active",
+            'data'          => Muhafidzoh::all(),
+            'Muhafidzoh' => Muhafidzoh::with([ 'kelompok', 'tempat'])->get(),
         );
         return view('data/muhafidzoh',$data);
     }
@@ -53,6 +60,8 @@ class DataController extends Controller
             'title'         => ' Data Dosen Pembimbing',
             "menuData"  =>  "active",
             "menuDosen"  =>  "active",
+            'data'          => Dosen::all(),
+            'dosen' => Dosen::with([ 'kelompok', 'muhafidzoh','tempat'])->get(),
         );
         return view('data/dosen',$data);
     }
