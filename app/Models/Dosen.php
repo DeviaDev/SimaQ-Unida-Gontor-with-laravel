@@ -15,6 +15,10 @@ class Dosen extends Model
         'nama_dosen','id_muhafidzoh', 'id_kelompok', 'id_tempat'
     ];
 
+    public function mahasiswi()
+    {
+        return $this->hasMany(Mahasiswi::class, 'id_dosen', 'id_dosen');
+    }
 
     // 🔹 Relasi ke tabel Muhafidzoh
     public function muhafidzoh()

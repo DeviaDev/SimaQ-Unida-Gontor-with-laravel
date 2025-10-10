@@ -49,30 +49,36 @@
                 </thead>
 
                 <tbody>
-                    @foreach ($data as $mhz)
+                    @foreach ($data as $item)
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
-                        <td>{{ $mhz->nama_muhafidzoh }}</td>
-                        <td>{{ $mhz->keterangan }}</td>
-                        <td>{{ $mhz->kelompok->kode_kelompok ?? '-' }}</td>
-                        <td>{{ $mhz->tempat->nama_tempat ?? '-' }}</td>
+                        <td>{{ $item->nama_muhafidzoh }}</td>
+                        <td>{{ $item->keterangan }}</td>
+                        <td>{{ $item->kelompok->kode_kelompok ?? '-' }}</td>
+                        <td>{{ $item->tempat->nama_tempat ?? '-' }}</td>
+                        
+                        
                         <td class="text-center">
-                            //route'userEdit',$mhz->id
-                            <a href="#" class="btn btn-sm btn-warning">
+                            <div style="display: inline-flex; gap: 8px;">
+                            <a href="{{ route('userEdit',$item->id_muhafidzoh) }}" class="btn btn-sm btn-warning">
                                 <i class="fas fa-edit"></i>
                             </a>
 
                             <!-- Tombol hapus -->
-                            {{-- <button
+                            <button
                                 class="btn btn-sm btn-danger deleteButton"
-                                data-id="{{ $item->id }}"
-                                data-name="{{ $item->name }}"
-                                data-email="{{ $item->email }}"
+                                data-id="{{ $item->id_muhafidzoh }}"
+                                data-name="{{ $item->nama_muhafidzoh }}"
+                                data-keterangan="{{ $item->keterangan }}"
+                                data-kelompok="{{ $item->kode_kelompok }}"
+                                data-tempat="{{ $item->nama_tempat }}"
                                 data-toggle="modal"
                                 data-target="#deleteModal">
                                 <i class="fas fa-trash"></i>
-                            </button> --}}
+                            </button>
+                            </div>
                         </td>
+                        
                     </tr>
                     @endforeach
                 </tbody>

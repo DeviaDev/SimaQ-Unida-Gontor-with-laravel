@@ -31,21 +31,13 @@ Route::get('dashboard', [DashboardController::class,'index'])->name('dashboard')
 
 //user
 Route::get('user', [UserController::class,'index'])->name('user');
-
 Route::get('user/create', [UserController::class,'create'])->name('userCreate');
-
 Route::get('/user/edit/{id}', [UserController::class, 'edit'])->name('userEdit');
-
 Route::post('/user/update/{id}', [UserController::class, 'update'])->name('userUpdate');
-
 Route::delete('/user/destroy/{id}', [UserController::class, 'destroy'])->name('userDestroy');
-
 Route::post('user/store', [UserController::class,'store'])->name('userStore');
-
 Route::post('/user/import', [UserController::class, 'importExcel'])->name('userImport');
-
 Route::get('/user/excel', [UserController::class, 'excel'])->name('userExport');
-
 Route::get('/admin/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
 
 
@@ -54,30 +46,63 @@ Route::get('/admin/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
 //DATA
 Route::get('index', [DataController::class,'index'])->name('index');
 
-Route::get('pengurus', [DataController::class,'pengurus'])->name('pengurus');
-
-Route::get('mahasiswi', [DataController::class,'mahasiswi'])->name('mahasiswi');
-
-Route::get('muhafidzoh', [DataController::class,'muhafidzoh'])->name('muhafidzoh');
-
-Route::get('dosen', [DataController::class,'dosen'])->name('dosen');
-
-
-
-
-Route::prefix('data')->group(function () {
-    Route::get('/{type}', [DataController::class, 'index'])->name('data.index');
-    Route::get('/{type}/create', [DataController::class, 'create'])->name('data.create');
-    Route::post('/{type}/store', [DataController::class, 'store'])->name('data.store');
-    Route::get('/{type}/edit/{id}', [DataController::class, 'edit'])->name('data.edit');
-    Route::post('/{type}/update/{id}', [DataController::class, 'update'])->name('data.update');
-    Route::delete('/{type}/destroy/{id}', [DataController::class, 'destroy'])->name('data.destroy');
-
-    // Export & Import
-    Route::get('/{type}/export', [DataController::class, 'exportExcel'])->name('data.export');
-    Route::get('/{type}/pdf', [DataController::class, 'exportPdf'])->name('data.pdf');
-    Route::post('/{type}/import', [DataController::class, 'importExcel'])->name('data.import');
+//pengurus
+Route::prefix('pengurus')->group(function () {
+    Route::get('/', [DataController::class, 'pengurus'])->name('pengurus');
+    Route::get('/create', [DataController::class, 'create1'])->name('pengurusCreate');
+    Route::get('/edit/{id}', [DataController::class, 'edit1'])->name('pengurusEdit');
+    Route::post('/update/{id}', [DataController::class, 'update1'])->name('pengurusUpdate');
+    Route::delete('/destroy/{id}', [DataController::class, 'destroy1'])->name('pengurusDestroy');
+    Route::post('/store', [DataController::class, 'store1'])->name('pengurusStore');
+    Route::post('/import', [DataController::class, 'importExcel1'])->name('pengurusImport');
+    Route::get('/excel', [DataController::class, 'excel1'])->name('pengurusExport');
+    Route::get('/pdf', [DataController::class, 'pdf1'])->name('pengurusPdf');
 });
+
+
+//mahasiswi
+Route::prefix('mahasiswi')->group(function () {
+    Route::get('/', [DataController::class, 'mahasiswi'])->name('mahasiswi');
+    Route::get('/create', [DataController::class, 'create'])->name('mahasiswiCreate');
+    Route::get('/edit/{id}', [DataController::class, 'edit'])->name('mahasiswiEdit');
+    Route::post('/update/{id}', [DataController::class, 'update'])->name('mahasiswiUpdate');
+    Route::delete('/destroy/{id}', [DataController::class, 'destroy'])->name('mahasiswiDestroy');
+    Route::post('/store', [DataController::class, 'store'])->name('mahasiswiStore');
+    Route::post('/import', [DataController::class, 'importExcel'])->name('mahasiswiImport');
+    Route::get('/excel', [DataController::class, 'excel'])->name('mahasiswiExport');
+    Route::get('/pdf', [DataController::class, 'pdf'])->name('mahasiswiPdf');
+});
+
+
+//muhafidzoh
+Route::prefix('muhafidzoh')->group(function () {
+    Route::get('/', [DataController::class, 'muhafidzoh'])->name('muhafidzoh');
+    Route::get('/create', [DataController::class, 'create'])->name('muhafidzohCreate');
+    Route::get('/edit/{id}', [DataController::class, 'edit'])->name('muhafidzohEdit');
+    Route::post('/update/{id}', [DataController::class, 'update'])->name('muhafidzohUpdate');
+    Route::delete('/destroy/{id}', [DataController::class, 'destroy'])->name('muhafidzohDestroy');
+    Route::post('/store', [DataController::class, 'store'])->name('muhafidzohStore');
+    Route::post('/import', [DataController::class, 'importExcel'])->name('muhafidzohImport');
+    Route::get('/excel', [DataController::class, 'excel'])->name('muhafidzohExport');
+    Route::get('/pdf', [DataController::class, 'pdf'])->name('muhafidzohPdf');
+});
+
+
+//dosen
+Route::prefix('dosen')->group(function () {
+    Route::get('/', [DataController::class, 'dosen'])->name('dosen');
+    Route::get('/create', [DataController::class, 'create'])->name('dosenCreate');
+    Route::get('/edit/{id}', [DataController::class, 'edit'])->name('dosenEdit');
+    Route::post('/update/{id}', [DataController::class, 'update'])->name('dosenUpdate');
+    Route::delete('/destroy/{id}', [DataController::class, 'destroy'])->name('dosenDestroy');
+    Route::post('/store', [DataController::class, 'store'])->name('dosenStore');
+    Route::post('/import', [DataController::class, 'importExcel'])->name('dosenImport');
+    Route::get('/excel', [DataController::class, 'excel'])->name('dosenExport');
+    Route::get('/pdf', [DataController::class, 'pdf'])->name('dosenPdf');
+});
+
+
+
 
 
 

@@ -18,4 +18,10 @@ class UsersExport implements FromView
     {
         return view('admin.user.excel', ['users' => $this->users]);
     }
+
+
+
+
+
+    
 }

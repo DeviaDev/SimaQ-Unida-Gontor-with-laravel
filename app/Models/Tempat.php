@@ -23,7 +23,7 @@ class Tempat extends Model
         return $this->hasMany(Muhafidzoh::class, 'id_tempat');
     }
 
-    public function dpa()
+    public function dosen()
     {
         return $this->hasMany(Dosen::class, 'id_tempat');
     }

@@ -18,4 +18,26 @@ class KelompokLT extends Model
         'id_tempat'
     ];
 
+
+    public function muhafidzoh()
+    {
+        return $this->hasMany(Muhafidzoh::class, 'id_kelompok');
+    }
+
+    public function dosen()
+    {
+        return $this->hasMany(Dosen::class, 'id_kelompok');
+    }
+
+    public function mahasiswi()
+    {
+        return $this->hasMany(Mahasiswi::class, 'id_kelompok');
+    }
+
+     public function tempat()
+    {
+        return $this->belongsTo(Tempat::class, 'id_tempat', 'id_tempat');
+    }
+    
+
 }

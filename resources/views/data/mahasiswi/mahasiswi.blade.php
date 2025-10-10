@@ -40,38 +40,52 @@
                 <thead class="bg-primary text-white">
                     <tr class="text-center">
                         <th>No</th>
-                        <th>Nama Dosen</th>
-                        <th>Kelompok</th>
+                        <th>Nama Mahasiswi</th>
+                        <th>Prodi</th>
+                        <th>Semester</th>
                         <th>Nama Muhafidzoh</th>
+                        <th>Kelompok</th>
                         <th>Tempat</th>
+                        <th>Dosen Pembimbing</th>
                         <th>Action</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    @foreach ($data as $dsn)
+                    @foreach ($data as $item)
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
-                        <td>{{ $dsn->nama_dosen }}</td>
-                        <td>{{ $dsn->kelompok->kode_kelompok ?? '-' }}</td>
-                        <td>{{ $dsn->muhafidzoh->nama_muhafidzoh ?? '-' }}</td>
-                        <td>{{ $dsn->tempat->nama_tempat ?? '-' }}</td>
+                        <td>{{ $item->nama_mahasiswi }}</td>
+                        <td>{{ $item->prodi }}</td>
+                        <td>{{ $item->semester }}</td>
+                        <td>{{ $item->muhafidzoh->nama_muhafidzoh ?? '-' }}</td>
+                        <td>{{ $item->kelompok->kode_kelompok ?? '-' }}</td>
+                        <td>{{ $item->tempat->nama_tempat ?? '-' }}</td>
+                        <td>{{ $item->dosen->nama_dosen ?? '-' }}</td>
+
                         <td class="text-center">
-                            {{-- route'userEdit',$mhs->id --}}
-                            <a href="#" class="btn btn-sm btn-warning">
+                            <div style="display: inline-flex; gap: 8px;">
+                            <a href="
+                            {{ route('userEdit',$item->id_mahasiswi) }}" class="btn btn-sm btn-warning ">
                                 <i class="fas fa-edit"></i>
                             </a>
 
                             <!-- Tombol hapus -->
-                            {{-- <button
+                            <button
                                 class="btn btn-sm btn-danger deleteButton"
-                                data-id="{{ $item->id }}"
-                                data-name="{{ $item->name }}"
-                                data-email="{{ $item->email }}"
+                                data-id="{{ $item->id_mahasiswi }}"
+                                data-name="{{ $item->nama_mahasiswi }}"
+                                data-prodi="{{ $item->prodi }}"
+                                data-semester="{{ $item->semester }}"
+                                data-muhafidzoh="{{ $item->nama_muhafidzoh }}"
+                                data-kelompok="{{ $item->kode_kelompok }}"
+                                data-tempat="{{ $item->nama_tempat }}"
+                                data-dosen="{{ $item->nama_dosen }}"
                                 data-toggle="modal"
                                 data-target="#deleteModal">
                                 <i class="fas fa-trash"></i>
-                            </button> --}}
+                            </button>
+                            </div>
                         </td>
                     </tr>
                     @endforeach

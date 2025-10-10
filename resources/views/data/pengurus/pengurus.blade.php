@@ -9,12 +9,12 @@
 <div class="card">
     <div class="card-header d-flex flex-wrap justify-content-center justify-content-xl-between">
         <div class="mb-1 mr-2">
-            <a href="{{ route('userCreate') }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus mr-2"></i> Add User
+            <a href="{{ route('pengurusCreate') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus mr-2"></i> Add Pengurus
             </a>
         </div>
         <div class="mr-1">
-            <form action="{{ route('userImport') }}" method="POST" enctype="multipart/form-data" class="d-inline">
+            <form action="{{ route('pengurusImport') }}" method="POST" enctype="multipart/form-data" class="d-inline">
                 @csrf
                 <input type="file" name="file" class="d-none" id="fileInput" accept=".xls,.xlsx" onchange="this.form.submit()">
                 <button type="button" class="btn btn-info btn-sm" onclick="document.getElementById('fileInput').click()">
@@ -40,45 +40,45 @@
                 <thead class="bg-primary text-white">
                     <tr class="text-center">
                         <th>No</th>
-                        <th>Nama Mahasiswi</th>
-                        <th>Prodi</th>
-                        <th>Semester</th>
-                        <th>Nama Muhafidzoh</th>
-                        <th>Kelompok</th>
-                        <th>Tempat</th>
-                        <th>Dosen Pembimbing</th>
+                        <th>Foto</th>
+                        <th>Nama Pengurus</th>
+                        <th>Email</th>
                         <th>Action</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    @foreach ($data as $mhs)
+                    @foreach ($data as $item)
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
-                        <td>{{ $mhs->nama_mahasiswi }}</td>
-                        <td>{{ $mhs->prodi }}</td>
-                        <td>{{ $mhs->semester }}</td>
-                        <td>{{ $mhs->muhafidzoh->nama_muhafidzoh ?? '-' }}</td>
-                        <td>{{ $mhs->kelompok->kode_kelompok ?? '-' }}</td>
-                        <td>{{ $mhs->tempat->nama_tempat ?? '-' }}</td>
-                        <td>{{ $mhs->dosen->nama_dosen ?? '-' }}</td>
+                        <td><img src="{{ asset('storage/foto_pengurus/' . $item->foto) }}" alt="Foto" width="100"></td>
+                        <td>{{ $item->nama }}</td>
+                        <td>{{ $item->email }}</td>
+
+
+                        
                         <td class="text-center">
-                            //route'userEdit',$item->id
-                            <a href="#" class="btn btn-sm btn-warning">
+                            <div style="display: inline-flex; gap: 8px;">
+                            <a href="{{ route('pengurusEdit',$item->id) }}" class="btn btn-sm btn-warning">
                                 <i class="fas fa-edit"></i>
                             </a>
 
                             <!-- Tombol hapus -->
-                            {{-- <button
+                            <button
                                 class="btn btn-sm btn-danger deleteButton"
                                 data-id="{{ $item->id }}"
-                                data-name="{{ $item->name }}"
+                                data-foto="{{ $item->foto }}"
+                                data-nama="{{ $item->nama}}"
                                 data-email="{{ $item->email }}"
                                 data-toggle="modal"
                                 data-target="#deleteModal">
                                 <i class="fas fa-trash"></i>
-                            </button> --}}
+
+                            </button>
+                                
+                            </div>
                         </td>
+                        
                     </tr>
                     @endforeach
                 </tbody>
@@ -94,7 +94,7 @@
       @method('DELETE')
       <div class="modal-content">
         <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Hapus User?</h5>
+          <h5 class="modal-title">Hapus Data Pengurus?</h5>
           <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body">
@@ -117,12 +117,12 @@ $(document).ready(function(){
     // Tombol hapus
     $(document).on('click', '.deleteButton', function() {
         let id = $(this).data('id');
-        let name = $(this).data('name');
+        let nama = $(this).data('nama');
         let email = $(this).data('email');
 
-        $('#deleteForm').attr('action', '/user/destroy/' + id);
+        $('#deleteForm').attr('action', '/pengurus/destroy/' + id);
         $('#userInfo').html(`
-            <strong>Nama:</strong> ${name}<br>
+            <strong>Nama:</strong> ${nama}<br>
             <strong>Email:</strong> ${email}
         `);
     });
@@ -131,7 +131,7 @@ $(document).ready(function(){
     $('#exportPdf').on('click', function(e){
         e.preventDefault();
         let search = $('input[type="search"]').val(); // ambil dari DataTables search box
-        let url = "{{ route('userPdf') }}";
+        let url = "{{ route('pengurusPdf') }}";
 
         if(search) {
             url += '?search=' + encodeURIComponent(search);
@@ -143,7 +143,7 @@ $(document).ready(function(){
     $('#exportExcel').on('click', function(e){
     e.preventDefault();
     let search = $('input[type="search"]').val(); // ambil keyword dari DataTables
-    let url = "{{ route('userExport') }}";
+    let url = "{{ route('pengurusExport') }}";
 
     if(search) {
         url += '?search=' + encodeURIComponent(search);
@@ -154,6 +154,9 @@ $(document).ready(function(){
 
 
 });
+
+
+
 </script>
 
 @endsection

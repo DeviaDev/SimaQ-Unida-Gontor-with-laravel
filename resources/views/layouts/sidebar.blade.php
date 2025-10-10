@@ -50,7 +50,7 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Data Screens:</h6>
-                        <a class="collapse-item {{ $menuPengurus ?? ''}}"   href="{{ route('pengurus') }} "> Data Pengurus</a>
+                        <a class="collapse-item {{ $menuPengurus ?? '' }}" href="{{ route('pengurus') }}">Data Pengurus</a>
                         <a class="collapse-item {{ $menuMahasiswi ?? ''}}"  href="{{ route('mahasiswi') }}"> Data Mahasiswi</a>
                         <a class="collapse-item {{ $menuMuhafidzoh ?? ''}}" href="{{ route('muhafidzoh') }}">Data Muhafizoh</a>
                         <a class="collapse-item {{ $menuDosen ?? ''}}"      href="{{ route('dosen') }}">     Data Dosen Pembimbing</a>
