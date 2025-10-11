@@ -46,6 +46,50 @@ Route::get('/admin/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
 //DATA
 Route::get('index', [DataController::class,'index'])->name('index');
 
+
+//dosen
+Route::prefix('dosen')->group(function () {
+    Route::get('/', [DataController::class, 'dosen'])->name('dosen');
+    Route::get('/create', [DataController::class, 'create4'])->name('dosenCreate');
+    Route::get('/edit/{id_dosen}', [DataController::class, 'edit4'])->name('dosenEdit');
+    Route::post('/update/{id_dosen}', [DataController::class, 'update4'])->name('dosenUpdate');
+    Route::delete('/destroy/{id_dosen}', [DataController::class, 'destroy4'])->name('dosenDestroy');
+    Route::post('/store', [DataController::class, 'store4'])->name('dosenStore');
+    Route::post('/import', [DataController::class, 'importExcel4'])->name('dosenImport');
+    Route::get('/excel', [DataController::class, 'excel4'])->name('dosenExport');
+    Route::get('/pdf', [DataController::class, 'pdf4'])->name('dosenPdf');
+    Route::get('/get-tempat/{id_kelompok}', [App\Http\Controllers\DataController::class, 'getTempat']);
+
+});
+
+//mahasiswi
+Route::prefix('mahasiswi')->group(function () {
+    Route::get('/', [DataController::class, 'mahasiswi'])->name('mahasiswi');
+    Route::get('/create', [DataController::class, 'create3'])->name('mahasiswiCreate');
+    Route::get('/edit/{id_mahasiswi}', [DataController::class, 'edit3'])->name('mahasiswiEdit');
+    Route::post('/update/{id_mahasiswi}', [DataController::class, 'update3'])->name('mahasiswiUpdate');
+    Route::delete('/destroy/{id_mahasiswi}', [DataController::class, 'destroy3'])->name('mahasiswiDestroy');
+    Route::post('/store', [DataController::class, 'store3'])->name('mahasiswiStore');
+    Route::post('/import', [DataController::class, 'importExcel3'])->name('mahasiswiImport');
+    Route::get('/excel', [DataController::class, 'excel3'])->name('mahasiswiExport');
+    Route::get('/pdf', [DataController::class, 'pdf3'])->name('mahasiswiPdf');
+});
+
+
+//muhafidzoh
+Route::prefix('muhafidzoh')->group(function () {
+    Route::get('/', [DataController::class, 'muhafidzoh'])->name('muhafidzoh');
+    Route::get('/create', [DataController::class, 'create2'])->name('muhafidzohCreate');
+    Route::get('/edit/{id_muhafidzoh}', [DataController::class, 'edit2'])->name('muhafidzohEdit');
+    Route::post('/update/{id_muhafidzoh}', [DataController::class, 'update2'])->name('muhafidzohUpdate');
+    Route::delete('/destroy/{id_muhafidzoh}', [DataController::class, 'destroy2'])->name('muhafidzohDestroy');
+    Route::post('/store', [DataController::class, 'store2'])->name('muhafidzohStore');
+    Route::post('/import', [DataController::class, 'importExcel2'])->name('muhafidzohImport');
+    Route::get('/excel', [DataController::class, 'excel2'])->name('muhafidzohExport');
+    Route::get('/pdf', [DataController::class, 'pdf2'])->name('muhafidzohPdf');
+});
+
+
 //pengurus
 Route::prefix('pengurus')->group(function () {
     Route::get('/', [DataController::class, 'pengurus'])->name('pengurus');
@@ -58,50 +102,6 @@ Route::prefix('pengurus')->group(function () {
     Route::get('/excel', [DataController::class, 'excel1'])->name('pengurusExport');
     Route::get('/pdf', [DataController::class, 'pdf1'])->name('pengurusPdf');
 });
-
-
-//mahasiswi
-Route::prefix('mahasiswi')->group(function () {
-    Route::get('/', [DataController::class, 'mahasiswi'])->name('mahasiswi');
-    Route::get('/create', [DataController::class, 'create'])->name('mahasiswiCreate');
-    Route::get('/edit/{id}', [DataController::class, 'edit'])->name('mahasiswiEdit');
-    Route::post('/update/{id}', [DataController::class, 'update'])->name('mahasiswiUpdate');
-    Route::delete('/destroy/{id}', [DataController::class, 'destroy'])->name('mahasiswiDestroy');
-    Route::post('/store', [DataController::class, 'store'])->name('mahasiswiStore');
-    Route::post('/import', [DataController::class, 'importExcel'])->name('mahasiswiImport');
-    Route::get('/excel', [DataController::class, 'excel'])->name('mahasiswiExport');
-    Route::get('/pdf', [DataController::class, 'pdf'])->name('mahasiswiPdf');
-});
-
-
-//muhafidzoh
-Route::prefix('muhafidzoh')->group(function () {
-    Route::get('/', [DataController::class, 'muhafidzoh'])->name('muhafidzoh');
-    Route::get('/create', [DataController::class, 'create'])->name('muhafidzohCreate');
-    Route::get('/edit/{id}', [DataController::class, 'edit'])->name('muhafidzohEdit');
-    Route::post('/update/{id}', [DataController::class, 'update'])->name('muhafidzohUpdate');
-    Route::delete('/destroy/{id}', [DataController::class, 'destroy'])->name('muhafidzohDestroy');
-    Route::post('/store', [DataController::class, 'store'])->name('muhafidzohStore');
-    Route::post('/import', [DataController::class, 'importExcel'])->name('muhafidzohImport');
-    Route::get('/excel', [DataController::class, 'excel'])->name('muhafidzohExport');
-    Route::get('/pdf', [DataController::class, 'pdf'])->name('muhafidzohPdf');
-});
-
-
-//dosen
-Route::prefix('dosen')->group(function () {
-    Route::get('/', [DataController::class, 'dosen'])->name('dosen');
-    Route::get('/create', [DataController::class, 'create'])->name('dosenCreate');
-    Route::get('/edit/{id}', [DataController::class, 'edit'])->name('dosenEdit');
-    Route::post('/update/{id}', [DataController::class, 'update'])->name('dosenUpdate');
-    Route::delete('/destroy/{id}', [DataController::class, 'destroy'])->name('dosenDestroy');
-    Route::post('/store', [DataController::class, 'store'])->name('dosenStore');
-    Route::post('/import', [DataController::class, 'importExcel'])->name('dosenImport');
-    Route::get('/excel', [DataController::class, 'excel'])->name('dosenExport');
-    Route::get('/pdf', [DataController::class, 'pdf'])->name('dosenPdf');
-});
-
-
 
 
 

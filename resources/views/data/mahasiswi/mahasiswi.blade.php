@@ -9,12 +9,12 @@
 <div class="card">
     <div class="card-header d-flex flex-wrap justify-content-center justify-content-xl-between">
         <div class="mb-1 mr-2">
-            <a href="{{ route('userCreate') }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus mr-2"></i> Add User
+            <a href="{{ route('mahasiswiCreate') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus mr-2"></i> Add Mahasiswi
             </a>
         </div>
         <div class="mr-1">
-            <form action="{{ route('userImport') }}" method="POST" enctype="multipart/form-data" class="d-inline">
+            <form action="{{ route('mahasiswiImport') }}" method="POST" enctype="multipart/form-data" class="d-inline">
                 @csrf
                 <input type="file" name="file" class="d-none" id="fileInput" accept=".xls,.xlsx" onchange="this.form.submit()">
                 <button type="button" class="btn btn-info btn-sm" onclick="document.getElementById('fileInput').click()">
@@ -66,7 +66,7 @@
                         <td class="text-center">
                             <div style="display: inline-flex; gap: 8px;">
                             <a href="
-                            {{ route('userEdit',$item->id_mahasiswi) }}" class="btn btn-sm btn-warning ">
+                            {{ route('mahasiswiEdit',$item->id_mahasiswi) }}" class="btn btn-sm btn-warning ">
                                 <i class="fas fa-edit"></i>
                             </a>
 
@@ -139,7 +139,7 @@ $(document).ready(function(){
     $('#exportPdf').on('click', function(e){
         e.preventDefault();
         let search = $('input[type="search"]').val(); // ambil dari DataTables search box
-        let url = "{{ route('userPdf') }}";
+        let url = "{{ route('mahasiswiPdf') }}";
 
         if(search) {
             url += '?search=' + encodeURIComponent(search);
@@ -151,7 +151,7 @@ $(document).ready(function(){
     $('#exportExcel').on('click', function(e){
     e.preventDefault();
     let search = $('input[type="search"]').val(); // ambil keyword dari DataTables
-    let url = "{{ route('userExport') }}";
+    let url = "{{ route('mahasiswiExport') }}";
 
     if(search) {
         url += '?search=' + encodeURIComponent(search);

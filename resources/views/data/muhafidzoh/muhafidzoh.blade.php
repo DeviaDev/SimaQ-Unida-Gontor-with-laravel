@@ -9,12 +9,12 @@
 <div class="card">
     <div class="card-header d-flex flex-wrap justify-content-center justify-content-xl-between">
         <div class="mb-1 mr-2">
-            <a href="{{ route('userCreate') }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus mr-2"></i> Add User
+            <a href="{{ route('muhafidzohCreate') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus mr-2"></i> Add Muhafidzoh
             </a>
         </div>
         <div class="mr-1">
-            <form action="{{ route('userImport') }}" method="POST" enctype="multipart/form-data" class="d-inline">
+            <form action="{{ route('muhafidzohImport') }}" method="POST" enctype="multipart/form-data" class="d-inline">
                 @csrf
                 <input type="file" name="file" class="d-none" id="fileInput" accept=".xls,.xlsx" onchange="this.form.submit()">
                 <button type="button" class="btn btn-info btn-sm" onclick="document.getElementById('fileInput').click()">
@@ -131,7 +131,7 @@ $(document).ready(function(){
     $('#exportPdf').on('click', function(e){
         e.preventDefault();
         let search = $('input[type="search"]').val(); // ambil dari DataTables search box
-        let url = "{{ route('userPdf') }}";
+        let url = "{{ route('muhafidzohPdf') }}";
 
         if(search) {
             url += '?search=' + encodeURIComponent(search);
@@ -143,7 +143,7 @@ $(document).ready(function(){
     $('#exportExcel').on('click', function(e){
     e.preventDefault();
     let search = $('input[type="search"]').val(); // ambil keyword dari DataTables
-    let url = "{{ route('userExport') }}";
+    let url = "{{ route('muhafidzohExport') }}";
 
     if(search) {
         url += '?search=' + encodeURIComponent(search);
