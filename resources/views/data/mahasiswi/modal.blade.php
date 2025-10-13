@@ -11,10 +11,25 @@
       <div class="modal-body text-left">
         <div class="row">
             <div class="col-12">
-                Name : {{ $item->name }}
+                Nama Mahasiswi : {{ $item->nama_mahasiswi }}
             </div>
             <div class="col-12">
-                Email : {{ $item->email }}
+                Program Studi : {{ $item->prodi }}
+            </div>
+            <div class="col-12">
+                Semester : {{ $item->semester}}
+            </div>
+            <div class="col-12">
+                Nama Muhafidzoh : {{ $item->nama_muhafidzoh}}
+            </div>
+            <div class="col-12">
+                Kelompok : {{ $item->kode_kelompok}}
+            </div>
+            <div class="col-12">
+                Tempat : {{ $item->nama_tempat}}
+            </div>
+            <div class="col-12">
+                Nama_Dosen : {{ $item->nama_dosen }}
             </div>
         </div>
       </div>
@@ -22,7 +37,7 @@
         <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">
             <i class="fas fa-times"></i>
             Tutup</button>
-        <a href="{{ route('userDestroy', $item->id) }}" type="button" class="btn btn-danger btn-sm">
+        <a href="{{ route('mahasiswiDestroy', $item->id_mahasiswi) }}" type="button" class="btn btn-danger btn-sm">
             <i class="fas fa-trash"></i>
             Hapus</a>
       </div>

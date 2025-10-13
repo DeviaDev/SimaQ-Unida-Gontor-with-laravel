@@ -14,7 +14,13 @@
                 Name : {{ $item->name }}
             </div>
             <div class="col-12">
-                Email : {{ $item->email }}
+                Kode Kelompok : {{ $item->kode_kelompok }}
+            </div>
+            <div class="col-12">
+                Nama Muhafidzoh : {{ $item->nama_muhafidzoh }}
+            </div>
+            <div class="col-12">
+                Nama Tempat : {{ $item->nama_tempat }}
             </div>
         </div>
       </div>
@@ -22,7 +28,7 @@
         <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">
             <i class="fas fa-times"></i>
             Tutup</button>
-        <a href="{{ route('userDestroy', $item->id) }}" type="button" class="btn btn-danger btn-sm">
+        <a href="{{ route('dosenDestroy', $item->id_dosen) }}" type="button" class="btn btn-danger btn-sm">
             <i class="fas fa-trash"></i>
             Hapus</a>
       </div>

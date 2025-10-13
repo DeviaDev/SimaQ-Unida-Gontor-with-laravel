@@ -36,7 +36,7 @@
 
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
                 <thead class="bg-primary text-white">
                     <tr class="text-center">
                         <th>No</th>
@@ -65,17 +65,19 @@
                             </a>
 
                             <!-- Tombol hapus -->
-                            <button
-                                class="btn btn-sm btn-danger deleteButton"
-                                data-id="{{ $item->id_dosen }}"
-                                data-name="{{ $item->nama_dosen }}"
-                                data-kelompok="{{ $item->kode_kelompok }}"
-                                data-muhafidzoh="{{ $item->nama_muhafidzoh }}"
-                                data-tempat="{{ $item->nama_tempat }}"
-                                data-toggle="modal"
-                                data-target="#deleteModal">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                           <button
+                            class="btn btn-sm btn-danger deleteButton"
+                            data-id="{{ $item->id_dosen }}"
+                            data-nama_dosen="{{ $item->nama_dosen }}"
+                            data-kode_kelompok="{{ $item->kelompok->kode_kelompok ?? '-' }}"
+                            data-nama_muhafidzoh="{{ $item->muhafidzoh->nama_muhafidzoh ?? '-' }}"
+                            data-nama_tempat="{{ $item->tempat->nama_tempat ?? '-' }}"
+                            data-toggle="modal"
+                            data-target="#deleteModal">
+                            <i class="fas fa-trash"></i>
+                        </button>
+
+                           
                              </div>
                         </td>
                        
@@ -94,7 +96,7 @@
       @method('DELETE')
       <div class="modal-content">
         <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Hapus User?</h5>
+          <h5 class="modal-title">Hapus Data Dosen?</h5>
           <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body">
@@ -116,14 +118,19 @@ $(document).ready(function(){
 
     // Tombol hapus
     $(document).on('click', '.deleteButton', function() {
-        let id = $(this).data('id');
-        let name = $(this).data('name');
-        let email = $(this).data('email');
+        let id_dosen = $(this).data('id_dosen');
+        let nama_dosen = $(this).data('nama_dosen');
+        let kode_kelompok = $(this).data('kode_kelompok');
+        let nama_muhafidzoh = $(this).data('nama_muhafidzoh');
+        let nama_tempat = $(this).data('nama_tempat');
 
-        $('#deleteForm').attr('action', '/user/destroy/' + id);
+        $('#deleteForm').attr('action', '/dosen/destroy/' + id_dosen);
         $('#userInfo').html(`
-            <strong>Nama:</strong> ${name}<br>
-            <strong>Email:</strong> ${email}
+            <strong>Nama dosen:</strong> ${nama_dosen}<br>
+            <strong>Kode Kelompok:</strong> ${kode_kelompok}<br>
+            <strong>Nama Muhafidzoh:</strong> ${nama_muhafidzoh}<br>
+            <strong>Nama Tempat:</strong> ${nama_tempat}
+
         `);
     });
 

@@ -97,10 +97,10 @@ public function store4(Request $request)
     ]);
 
 
-    $dosen = Pengurus::findOrFail($id_dosen);
+    $dosen = dosen::findOrFail($id_dosen);
 
    //Simpan data
-    $dosen = new dosen();
+    
     $dosen->nama_dosen  = $request->nama_dosen;
     $dosen->id_muhafidzoh = $request->id_muhafidzoh;
     $dosen->id_kelompok  = $request->id_kelompok;
@@ -116,7 +116,7 @@ public function store4(Request $request)
         $data = array(
             'title'         => 'Edit Data Dosen',
             'menuData'      => 'active',
-            'dosen'      => dosen::findOrFail($id_dosen),
+            'dosen'      => dosen::with('muhafidzoh')->findOrFail($id_dosen),
             'muhafidzoh' => muhafidzoh::get(),
             'kelompok' => KelompokLT::get(),
             'tempat' => tempat::get(),
@@ -282,21 +282,35 @@ public function store3(Request $request)
      public function update3(Request $request, $id_mahasiswi)
 {
     $request->validate([
-        'foto'  => 'nullable|image|max:2048',
-        'nama'  => 'required|string|max:255',
-        'email' => 'required|email|max:255|unique:pengurus,email,' . $id_mahasiswi,
+        'nama_mahasiswi'    => 'required|string|max:255',
+        'prodi'=> 'required',
+        'semester' => 'required',
+        'id_dosen' => 'required',
+        'id_muhafidzoh' => 'required',
+        'id_kelompok'   => 'required',
+        'id_tempat'     => 'required',
     ], [
-        'foto.image'      => 'File foto harus berupa gambar',
-        'nama.required'   => 'Nama Tidak Boleh Kosong',
-        'email.required'  => 'Email Tidak Boleh Kosong',
-        'email.unique'    => 'Email Sudah Digunakan',
+        'nama_dosen.required'    => 'Nama Tidak Boleh Kosong',
+        'prodi.required'    => 'Program Studi Tidak Boleh Kosong',
+        'semester.required'    => 'Semester Tidak Boleh Kosong',
+        'id_dosen.required' => 'Dosen Tidak Boleh Kosong',
+        'id_muhafidzoh.required' => 'Muhafidzoh Tidak Boleh Kosong',
+        'id_kelompok.required'   => 'Kelompok Tidak Boleh Kosong',
+        'id_tempat.required'     => 'Tempat Tidak Boleh Kosong',
+
     ]);
+
 
     $mahasiswi = mahasiswi::findOrFail($id_mahasiswi);
 
-    // update field lain
-    $mahasiswi->nama  = $request->nama;
-    $mahasiswi->email = $request->email;
+    //Simpan data
+    $mahasiswi->nama_mahasiswi  = $request->nama_mahasiswi;
+    $mahasiswi->prodi  = $request->prodi;
+    $mahasiswi->semester  = $request->semester;
+    $mahasiswi->id_dosen = $request->id_dosen;
+    $mahasiswi->id_muhafidzoh = $request->id_muhafidzoh;
+    $mahasiswi->id_kelompok  = $request->id_kelompok;
+    $mahasiswi->id_tempat = $request->id_tempat;
     $mahasiswi->save();
 
     return redirect()->route('mahasiswi')->with('success', 'Data berhasil diedit');
@@ -309,6 +323,12 @@ public function store3(Request $request)
             'title'         => 'Edit Data Mahasiswi',
             'menuData'      => 'active',
             'mahasiswi'      => mahasiswi::findOrFail($id_mahasiswi),
+            'dosen' => Dosen::get(),
+            'muhafidzoh' => Muhafidzoh::get(),
+            'kelompok' => KelompokLT::get(),
+            'tempat' => Tempat::get(),
+        
+
             
         );
         return view('data/mahasiswi/edit',$data);
@@ -318,7 +338,7 @@ public function store3(Request $request)
 
     public function destroy3($id_mahasiswi)
 {
-    $mahasiswi = Pengurus::findOrFail($id_mahasiswi);
+    $mahasiswi = mahasiswi::findOrFail($id_mahasiswi);
 
 
     // Hapus data di database
@@ -452,22 +472,25 @@ public function store2(Request $request)
      public function update2(Request $request, $id_muhafidzoh)
 {
     $request->validate([
-        'foto'  => 'nullable|image|max:2048',
-        'nama'  => 'required|string|max:255',
-        'email' => 'required|email|max:255|unique:pengurus,email,' . $id_muhafidzoh,
+        'nama_muhafidzoh'    => 'required|string|max:255',
+        'keterangan'    => 'required|string|max:255',
+        'id_kelompok'   => 'required',
+        'id_tempat'     => 'required',
     ], [
-        'foto.image'      => 'File foto harus berupa gambar',
-        'nama.required'   => 'Nama Tidak Boleh Kosong',
-        'email.required'  => 'Email Tidak Boleh Kosong',
-        'email.unique'    => 'Email Sudah Digunakan',
+        'nama_muhafidzoh.required'    => 'Muhafidzoh Tidak Boleh Kosong',
+        'keterangan.required'    => 'Keterangan Tidak Boleh Kosong',
+        'id_kelompok.required'   => 'Kelompok Tidak Boleh Kosong',
+        'id_tempat.required'     => 'Tempat Tidak Boleh Kosong',
+
     ]);
 
-    $muhafidzoh = Pengurus::findOrFail($id_muhafidzoh);
+    $muhafidzoh = muhafidzoh::findOrFail($id_muhafidzoh);
 
-
-    // update field lain
-    $muhafidzoh->nama  = $request->nama;
-    $muhafidzoh->email = $request->email;
+   //Simpan data
+    $muhafidzoh->nama_muhafidzoh  = $request->nama_muhafidzoh;
+    $muhafidzoh->keterangan = $request->keterangan;
+    $muhafidzoh->id_kelompok  = $request->id_kelompok;
+    $muhafidzoh->id_tempat = $request->id_tempat;
     $muhafidzoh->save();
 
     return redirect()->route('muhafidzoh')->with('success', 'Data berhasil diedit');
@@ -480,6 +503,8 @@ public function store2(Request $request)
             'title'         => 'Edit Data Muhafidzoh',
             'menuData'      => 'active',
             'muhafidzoh'      => muhafidzoh::findOrFail($id_muhafidzoh),
+            'kelompok'         => KelompokLT::get(),
+            'tempat'         => Tempat::get(),
             
         );
         return view('data/muhafidzoh/edit',$data);
@@ -489,7 +514,7 @@ public function store2(Request $request)
 
     public function destroy2($id_muhafidzoh)
 {
-    $muhafidzoh = Pengurus::findOrFail($id_muhafidzoh);
+    $muhafidzoh = muhafidzoh::findOrFail($id_muhafidzoh);
 
 
     // Hapus data di database

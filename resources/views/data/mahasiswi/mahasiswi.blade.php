@@ -36,7 +36,7 @@
 
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
                 <thead class="bg-primary text-white">
                     <tr class="text-center">
                         <th>No</th>
@@ -73,14 +73,14 @@
                             <!-- Tombol hapus -->
                             <button
                                 class="btn btn-sm btn-danger deleteButton"
-                                data-id="{{ $item->id_mahasiswi }}"
-                                data-name="{{ $item->nama_mahasiswi }}"
+                                data-id_mahasiswi="{{ $item->id_mahasiswi }}"
+                                data-nama_mahasiswi="{{ $item->nama_mahasiswi }}"
                                 data-prodi="{{ $item->prodi }}"
                                 data-semester="{{ $item->semester }}"
-                                data-muhafidzoh="{{ $item->nama_muhafidzoh }}"
-                                data-kelompok="{{ $item->kode_kelompok }}"
-                                data-tempat="{{ $item->nama_tempat }}"
-                                data-dosen="{{ $item->nama_dosen }}"
+                                data-nama_muhafidzoh="{{ $item->muhafidzoh->nama_muhafidzoh }}"
+                                data-kode_kelompok="{{ $item->kelompok->kode_kelompok }}"
+                                data-nama_tempat="{{ $item->tempat->nama_tempat }}"
+                                data-nama_dosen="{{ $item->dosen->nama_dosen }}"
                                 data-toggle="modal"
                                 data-target="#deleteModal">
                                 <i class="fas fa-trash"></i>
@@ -102,7 +102,7 @@
       @method('DELETE')
       <div class="modal-content">
         <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Hapus User?</h5>
+          <h5 class="modal-title">Hapus Data Mahasiswi?</h5>
           <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body">
@@ -124,14 +124,25 @@ $(document).ready(function(){
 
     // Tombol hapus
     $(document).on('click', '.deleteButton', function() {
-        let id = $(this).data('id');
-        let name = $(this).data('name');
-        let email = $(this).data('email');
+        let id_mahasiswi = $(this).data('id_mahasiswi');
+        let nama_mahasiswi = $(this).data('nama_mahasiswi');
+        let prodi = $(this).data('prodi');
+        let semester = $(this).data('semester');
+        let nama_muhafidzoh = $(this).data('nama_muhafidzoh');
+        let kode_kelompok = $(this).data('kode_kelompok');
+        let nama_tempat = $(this).data('nama_tempat');
+        let nama_dosen = $(this).data('nama_dosen');
+        
 
-        $('#deleteForm').attr('action', '/user/destroy/' + id);
+        $('#deleteForm').attr('action', '/mahasiswi/destroy/' + id_mahasiswi);
         $('#userInfo').html(`
-            <strong>Nama:</strong> ${name}<br>
-            <strong>Email:</strong> ${email}
+            <strong>Nama Mahasiswi:</strong> ${nama_mahasiswi}<br>
+            <strong>Program Studi:</strong> ${prodi}<br>
+            <strong>semester:</strong> ${semester}<br>
+            <strong>Nama Muhafidzoh:</strong> ${nama_muhafidzoh}<br>
+            <strong>Kode Kelompok:</strong> ${kode_kelompok}<br>
+            <strong>Nama Tempat:</strong> ${nama_tempat}<br>
+            <strong>Nama dosen:</strong> ${nama_dosen}
         `);
     });
 
