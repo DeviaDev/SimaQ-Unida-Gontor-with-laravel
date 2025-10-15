@@ -11,7 +11,7 @@
       <div class="modal-body text-left">
         <div class="row">
             <div class="col-12">
-                Name : {{ $item->name }}
+                Name : {{ $item->nama_dosen }}
             </div>
             <div class="col-12">
                 Kode Kelompok : {{ $item->kode_kelompok }}

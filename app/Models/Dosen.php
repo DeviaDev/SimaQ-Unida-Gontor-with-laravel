@@ -29,8 +29,9 @@ class Dosen extends Model
     // 🔹 Relasi ke tabel Kelompok
     public function kelompok()
     {
-        return $this->belongsTo(KelompokLT::class, 'id_kelompok', 'id_kelompok');
+    return $this->belongsTo(KelompokLT::class, 'id_kelompok', 'id_kelompok');
     }
+
 
     // 🔹 Relasi ke tabel Tempat
     public function tempat()

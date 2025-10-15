@@ -67,7 +67,7 @@
                             <!-- Tombol hapus -->
                            <button
                             class="btn btn-sm btn-danger deleteButton"
-                            data-id="{{ $item->id_dosen }}"
+                            data-id_dosen="{{ $item->id_dosen }}"
                             data-nama_dosen="{{ $item->nama_dosen }}"
                             data-kode_kelompok="{{ $item->kelompok->kode_kelompok ?? '-' }}"
                             data-nama_muhafidzoh="{{ $item->muhafidzoh->nama_muhafidzoh ?? '-' }}"

@@ -17,7 +17,7 @@ class MuhafidzohExport implements FromView
     public function view(): View
     {
         return view('data.muhafidzoh.excel', [
-            'Pengurus' => $this->muhafidzoh
+            'muhafidzoh' => $this->muhafidzoh
         ]);
     }
 }

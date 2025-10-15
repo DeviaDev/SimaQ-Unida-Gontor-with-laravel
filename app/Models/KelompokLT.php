@@ -9,7 +9,7 @@ class KelompokLT extends Model
 {
     use HasFactory;
 
-    protected $table = 'kelompok_lt'; // ✅ sesuai dengan nama tabel di database kamu
+    protected $table = 'kelompok_lt';
     protected $primaryKey = 'id_kelompok';
     protected $fillable = [
         'kode_kelompok',
@@ -18,26 +18,26 @@ class KelompokLT extends Model
         'id_tempat'
     ];
 
+    // ✅ 1 kelompok hanya dimiliki oleh satu dosen dan satu muhafidzoh
+    public function dosen()
+    {
+        return $this->belongsTo(Dosen::class, 'id_dosen', 'id_dosen');
+    }
 
     public function muhafidzoh()
     {
-        return $this->hasMany(Muhafidzoh::class, 'id_kelompok');
+        return $this->belongsTo(Muhafidzoh::class, 'id_muhafidzoh', 'id_muhafidzoh');
     }
 
-    public function dosen()
-    {
-        return $this->hasMany(Dosen::class, 'id_kelompok');
-    }
-
-    public function mahasiswi()
-    {
-        return $this->hasMany(Mahasiswi::class, 'id_kelompok');
-    }
-
-     public function tempat()
+    public function tempat()
     {
         return $this->belongsTo(Tempat::class, 'id_tempat', 'id_tempat');
     }
-    
 
+    // ✅ tapi kelompok punya banyak mahasiswi
+    public function mahasiswi()
+    {
+        return $this->hasMany(Mahasiswi::class, 'id_kelompok', 'id_kelompok');
+    }
 }
+

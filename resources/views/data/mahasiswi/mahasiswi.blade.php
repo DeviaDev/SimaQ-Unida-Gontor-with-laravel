@@ -77,10 +77,10 @@
                                 data-nama_mahasiswi="{{ $item->nama_mahasiswi }}"
                                 data-prodi="{{ $item->prodi }}"
                                 data-semester="{{ $item->semester }}"
-                                data-nama_muhafidzoh="{{ $item->muhafidzoh->nama_muhafidzoh }}"
-                                data-kode_kelompok="{{ $item->kelompok->kode_kelompok }}"
-                                data-nama_tempat="{{ $item->tempat->nama_tempat }}"
-                                data-nama_dosen="{{ $item->dosen->nama_dosen }}"
+                                data-nama_muhafidzoh="{{ $item->muhafidzoh->nama_muhafidzoh ?? '-' }}"
+                                data-kode_kelompok="{{ $item->kelompok->kode_kelompok ?? '-'}}"
+                                data-nama_tempat="{{ $item->tempat->nama_tempat ?? '-'}}"
+                                data-nama_dosen="{{ $item->dosen->nama_dosen ?? '-'}}"
                                 data-toggle="modal"
                                 data-target="#deleteModal">
                                 <i class="fas fa-trash"></i>

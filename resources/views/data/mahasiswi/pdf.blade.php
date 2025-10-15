@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Data User</title>
+    <title>Data Mahasiswi</title>
     
     
     <style>
@@ -59,26 +59,36 @@
         <img src="{{ public_path('assets/img/kopsurat.png') }}" alt="Kop Surat">
     </div>
 
-    <h2>Data User</h2>
+    <h2>Data Mahasiswi</h2>
 
     <table>
-        <thead>
+    <thead>
+        <tr>
+            <th width="25" align="center">No</th>
+            <th width="25" align="center">Nama Mahasiswi</th>
+            <th width="25" align="center">Program Studi</th>
+            <th width="25" align="center">Semester</th>
+            <th width="25" align="center">Nama Muhafidzoh</th>
+            <th width="25" align="center">Kelompok</th>
+            <th width="25" align="center">Tempat</th>
+            <th width="25" align="center">Dosen Pembimbing</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach ($mahasiswi as $item)
             <tr>
-                <th>No</th>
-                <th>Nama</th>
-                <th>Email</th>
+                <td align="center">{{ $loop->iteration }}</td>
+                <td align="center">{{ $item->nama_mahasiswi }}</td>
+                <td align="center">{{ $item->prodi }}</td>
+                <td align="center">{{ $item->semester }}</td>
+                <td align="center">{{ $item->muhafidzoh->nama_muhafidzoh }}</td>
+                <td align="center">{{ $item->kelompok->kode_kelompok }}</td>
+                <td align="center">{{ $item->tempat->nama_tempat }}</td>
+                <td align="center">{{ $item->dosen->nama_dosen }}</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach($users as $item)
-                <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>{{ $item->name }}</td>
-                    <td>{{ $item->email }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+        @endforeach
+    </tbody>
+</table>
 
     <div class="ttd">
         Ponorogo, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }} <br>

@@ -8,11 +8,13 @@ use App\Models\Pengurus;
 use App\Models\Mahasiswi;
 use App\Models\KelompokLT;
 use App\Models\Muhafidzoh;
+use App\Exports\DosenExport;
 use App\Imports\DosenImport;
 use Illuminate\Http\Request;
 use App\Imports\PengurusImport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Dflydev\DotAccessData\Data;
+use App\Exports\MahasiswiExport;
 use App\Imports\MahasiswiImport;
 use App\Exports\MuhafidzohExport;
 use App\Imports\MuhafidzohImport;
@@ -25,6 +27,8 @@ class DataController extends Controller
 
 // ================================================ DOSEN ==========================================================
 
+
+
     public function dosen(){
         $data = array(
             'title'         => ' Data Dosen Pembimbing',
@@ -33,6 +37,7 @@ class DataController extends Controller
             'data'          => Dosen::all(),
             'dosen' => Dosen::with([ 'kelompok', 'muhafidzoh','tempat'])->get(),
         );
+
         return view('data/dosen/dosen',$data);
     }
 
@@ -137,21 +142,34 @@ public function store4(Request $request)
 }
 
 
-    public function excel4(Request $request)
+ public function excel4(Request $request)
 {
     $filename = now()->format('d-m-Y_H.i.s');
     $search = $request->input('search');
 
-    $query = dosen::query();
+    $query = Dosen::with(['kelompok', 'muhafidzoh', 'tempat']);
+
     if (!empty($search)) {
-        $query->where('nama', 'like', "%$search%")
-              ->orWhere('email', 'like', "%$search%");
+        $query->where(function ($q) use ($search) {
+            $q->where('nama_dosen', 'like', "%{$search}%")
+              ->orWhereHas('kelompok', function ($q2) use ($search) {
+                  $q2->where('kode_kelompok', 'like', "%{$search}%");
+              })
+              ->orWhereHas('muhafidzoh', function ($q3) use ($search) {
+                  $q3->where('nama_muhafidzoh', 'like', "%{$search}%");
+              })
+              ->orWhereHas('tempat', function ($q4) use ($search) {
+                  $q4->where('nama_tempat', 'like', "%{$search}%");
+              });
+        });
     }
 
     $dosen = $query->get();
+    
 
-    return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\DosenExport($dosen), 'DataDosen_'.$filename.'.xlsx');
+    return Excel::download(new DosenExport($dosen), 'DataDosen_'.$filename.'.xlsx');
 }
+
 
 
 
@@ -167,7 +185,7 @@ public function importExcel4(Request $request)
 
     try {
         Excel::import(new DosenImport, $request->file('file'));
-        return redirect()->route('dosen')->with('success', 'Data Pengurus berhasil diimport!');
+        return redirect()->route('dosen')->with('success', 'Data Dosen berhasil diimport!');
     } catch (\Exception $e) {
         return redirect()->route('dosen')->with('error', '❌ Terjadi kesalahan saat import: ' . $e->getMessage());
     }
@@ -179,12 +197,20 @@ public function importExcel4(Request $request)
     $filename = now()->format('d-m-Y_H.i.s');
     $search = $request->input('search');
 
-    // 🔍 Filter pencarian dari input search
-    $query = dosen::query();
+    $query = Dosen::with(['kelompok', 'muhafidzoh', 'tempat']);
+
     if (!empty($search)) {
         $query->where(function ($q) use ($search) {
-            $q->where('nama', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
+            $q->where('nama_dosen', 'like', "%{$search}%")
+              ->orWhereHas('kelompok', function ($q2) use ($search) {
+                  $q2->where('kode_kelompok', 'like', "%{$search}%");
+              })
+              ->orWhereHas('muhafidzoh', function ($q3) use ($search) {
+                  $q3->where('nama_muhafidzoh', 'like', "%{$search}%");
+              })
+              ->orWhereHas('tempat', function ($q4) use ($search) {
+                  $q4->where('nama_tempat', 'like', "%{$search}%");
+              });
         });
     }
 
@@ -356,13 +382,14 @@ public function store3(Request $request)
 
     $query = mahasiswi::query();
     if (!empty($search)) {
-        $query->where('nama', 'like', "%$search%")
-              ->orWhere('email', 'like', "%$search%");
+        $query->where('nama_mahasiswi', 'like', "%$search%")
+              ->orWhere('prodi', 'like', "%$search%")
+              ->orWhere('semester', 'like', "%$search%");
     }
 
     $mahasiswi = $query->get();
 
-    return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\MahasiswiExport($mahasiswi), 'DataMahasiswi_'.$filename.'.xlsx');
+    return Excel::download(new MahasiswiExport($mahasiswi), 'DataMahasiswi_'.$filename.'.xlsx');
 }
 
 
@@ -379,7 +406,7 @@ public function importExcel3(Request $request)
 
     try {
         Excel::import(new MahasiswiImport, $request->file('file'));
-        return redirect()->route('mahasiswi')->with('success', 'Data Pengurus berhasil diimport!');
+        return redirect()->route('mahasiswi')->with('success', 'Data Mahasiswi berhasil diimport!');
     } catch (\Exception $e) {
         return redirect()->route('mahasiswi')->with('error', '❌ Terjadi kesalahan saat import: ' . $e->getMessage());
     }
@@ -392,16 +419,15 @@ public function importExcel3(Request $request)
     $filename = now()->format('d-m-Y_H.i.s');
     $search = $request->input('search');
 
-    // 🔍 Filter pencarian dari input search
     $query = mahasiswi::query();
     if (!empty($search)) {
-        $query->where(function ($q) use ($search) {
-            $q->where('nama', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
-        });
+        $query->where('nama_mahasiswi', 'like', "%$search%")
+              ->orWhere('prodi', 'like', "%$search%")
+              ->orWhere('semester', 'like', "%$search%");
     }
 
     $mahasiswi = $query->get();
+
 
     // 🖨️ Generate PDF
     $pdf = Pdf::loadView('data.mahasiswi.pdf', compact('mahasiswi'))
@@ -464,7 +490,7 @@ public function store2(Request $request)
     $muhafidzoh->id_tempat = $request->id_tempat;
     $muhafidzoh->save();
 
-    return redirect()->route('muhafidzoh')->with('success', 'Data berhasil diedit');
+    return redirect()->route('muhafidzoh')->with('success', 'Data berhasil ditambahkan');
 }
 
   
@@ -532,13 +558,13 @@ public function store2(Request $request)
 
     $query = muhafidzoh::query();
     if (!empty($search)) {
-        $query->where('nama', 'like', "%$search%")
-              ->orWhere('email', 'like', "%$search%");
+        $query->where('nama_muhafidzoh', 'like', "%$search%")
+              ->orWhere('keterangan', 'like', "%$search%");
     }
 
     $muhafidzoh = $query->get();
 
-    return \Maatwebsite\Excel\Facades\Excel::download(new MuhafidzohExport($muhafidzoh), 'DataMuhafidzoh_'.$filename.'.xlsx');
+    return Excel::download(new MuhafidzohExport($muhafidzoh), 'DataMuhafidzoh_'.$filename.'.xlsx');
 }
 
 
@@ -555,7 +581,7 @@ public function importExcel2(Request $request)
 
     try {
         Excel::import(new MuhafidzohImport, $request->file('file'));
-        return redirect()->route('muhafidzoh')->with('success', 'Data Pengurus berhasil diimport!');
+        return redirect()->route('muhafidzoh')->with('success', 'Data Muhafidzoh berhasil diimport!');
     } catch (\Exception $e) {
         return redirect()->route('muhafidzoh')->with('error', '❌ Terjadi kesalahan saat import: ' . $e->getMessage());
     }
@@ -567,13 +593,10 @@ public function importExcel2(Request $request)
     $filename = now()->format('d-m-Y_H.i.s');
     $search = $request->input('search');
 
-    // 🔍 Filter pencarian dari input search
     $query = muhafidzoh::query();
     if (!empty($search)) {
-        $query->where(function ($q) use ($search) {
-            $q->where('nama', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
-        });
+        $query->where('nama_muhafidzoh', 'like', "%$search%")
+              ->orWhere('keterangan', 'like', "%$search%");
     }
 
     $muhafidzoh = $query->get();
