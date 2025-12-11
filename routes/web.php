@@ -137,9 +137,22 @@ Route::get('/pengurus/taujihat', [AbsensiPengurusController::class,'pengurusTauj
 
 
 //Ujian
+
 Route::get('index', [UjianController::class,'index'])->name('index');
 
+//mandiri
 Route::get('/tahfidz/mandiri', [UjianController::class,'mandiri'])->name('mandiri');
+Route::prefix('mandiri')->group(function () {
+    Route::get('/', [DataController::class, 'mandiri'])->name('mandiri');
+    Route::get('/create', [DataController::class, 'create3'])->name('mandiriCreate');
+    Route::get('/edit/{id_mahasiswi}', [DataController::class, 'edit3'])->name('mandiriEdit');
+    Route::post('/update/{id_mahasiswi}', [DataController::class, 'update3'])->name('mandiriUpdate');
+    Route::delete('/destroy/{id_mahasiswi}', [DataController::class, 'destroy3'])->name('mandiriDestroy');
+    Route::post('/store', [DataController::class, 'store3'])->name('mandiriStore');
+    Route::post('/import', [DataController::class, 'importExcel3'])->name('mandiriImport');
+    Route::get('/excel', [DataController::class, 'excel3'])->name('mandiriExport');
+    Route::get('/pdf', [DataController::class, 'pdf3'])->name('mandiriPdf');
+});
 
 Route::get('/tahfidz/serentak', [UjianController::class,'serentak'])->name('serentak');
 
