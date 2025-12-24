@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\Mahasiswi2;
 
 class AbsensiAnggotaController extends Controller
 {
@@ -14,17 +16,45 @@ class AbsensiAnggotaController extends Controller
         //
     }
 
+    public function absensiTahfidzMahasiswi(Request $request)
+    {
+        $query = Mahasiswi2::query();
 
-    public function absensiTahfidzMahasiswi(){
-        $data = array(
-            'title'         => 'Absensi Tahfidz Mahasiswi',
+        if (request('prodi')) {
+            $query->where('prodi', request('prodi'));
+        }
+
+        if (request('semester')) {
+            $query->where('semester', request('semester'));
+        }
+
+        if (request('kelompok')) {
+            $query->where('kelompok', request('kelompok'));
+        }
+
+        $mahasiswi2 = $query->get();
+
+        $kelompokList = [];
+
+        if (request('prodi') && request('semester')) {
+            $kelompokList = Mahasiswi2::where('prodi', request('prodi'))
+                ->where('semester', request('semester'))
+                ->select('kelompok')
+                ->distinct()
+                ->orderBy('kelompok')
+                ->pluck('kelompok');
+        }
+
+        return view('absensi.anggota.tahfidz.tahfidzmahasiswi', [
+            'title' => 'Absensi Tahfidz Mahasiswi',
+            'mahasiswi' => $mahasiswi2,
             'menuAbsensiAnggota' => 'active',
             'menuAbsensiTahfidz' => 'active',
             'tahfidzmahasiswi' => 'active',
-        );
-        return view('absensi.anggota.tahfidz.tahfidzmahasiswi
-',$data);
+            'kelompokList' => $kelompokList
+        ]);
     }
+
 
     public function absensiTahfidzMuhafidzoh(){
         $data = array(

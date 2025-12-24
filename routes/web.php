@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DokumentasiController;
 use App\Http\Controllers\AbsensiAnggotaController;
 use App\Http\Controllers\AbsensiPengurusController;
+use App\Http\Controllers\AbsensiController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,7 +29,6 @@ route::middleware('checkLogin')->group(function(){
 //dashboard
 Route::get('dashboard', [DashboardController::class,'index'])->name('dashboard');
 
-
 //user
 Route::get('user', [UserController::class,'index'])->name('user');
 Route::get('user/create', [UserController::class,'create'])->name('userCreate');
@@ -39,9 +39,6 @@ Route::post('user/store', [UserController::class,'store'])->name('userStore');
 Route::post('/user/import', [UserController::class, 'importExcel'])->name('userImport');
 Route::get('/user/excel', [UserController::class, 'excel'])->name('userExport');
 Route::get('/admin/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
-
-
-
 
 //DATA
 Route::get('index', [DataController::class,'index'])->name('index');
@@ -110,9 +107,21 @@ Route::prefix('pengurus')->group(function () {
 
 //absensi Anggota
 
-Route::get('absensi/anggota/tahfidz/mahasiswi', [AbsensiAnggotaController::class,'absensiTahfidzMahasiswi'])->name('absensiTahfidzMahasiswi');
+Route::get('/absensi/anggota/tahfidz/mahasiswi',[AbsensiAnggotaController::class, 'absensiTahfidzMahasiswi'])->name('absensiTahfidzMahasiswi');
 
 Route::get('absensi/anggota/tahfidz/muhafidzoh', [AbsensiAnggotaController::class,'absensiTahfidzMuhafidzoh'])->name('absensiTahfidzMuhafidzoh');
+
+//ABSENSIII
+// Route untuk menampilkan halaman (GET)
+Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
+Route::post('/absensi/simpan', [AbsensiController::class, 'simpan'])
+    ->name('absensi.simpan');
+
+Route::post('/absensi/push-pertemuan', [AbsensiController::class, 'pushPertemuan'])
+    ->name('absensi.push');
+
+Route::post('/absensi/refresh', [AbsensiController::class, 'refresh'])
+    ->name('absensi.refresh');
 
 
 //tahsin
@@ -123,8 +132,6 @@ Route::get('absensi/anggota/tilawah/muhafidzoh', [AbsensiAnggotaController::clas
 Route::get('absensi/anggota/tilawah/staf', [AbsensiAnggotaController::class,'absensiTilawahStaf'])->name('absensiTilawahStaf');
 
 Route::get('absensi/anggota/tilawah/dosen', [AbsensiAnggotaController::class,'absensiTilawahDosen'])->name('absensiTilawahDosen');
-
-
 
 //absensi Pengurus
 

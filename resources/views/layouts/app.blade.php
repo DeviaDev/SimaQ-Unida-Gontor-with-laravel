@@ -132,3 +132,6 @@
     </a>
 
 @include('layouts/footer')
+
+@stack('scripts')
+</body>
