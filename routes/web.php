@@ -123,7 +123,8 @@ Route::post('/absensi/push-pertemuan', [AbsensiController::class, 'pushPertemuan
 Route::post('/absensi/refresh', [AbsensiController::class, 'refresh'])
     ->name('absensi.refresh');
 
-
+Route::post('/absensi/export', [AbsensiController::class, 'export'])
+    ->name('absensi.export');
 //tahsin
 Route::get('absensi/anggota/tilawah/mahasiswi', [AbsensiAnggotaController::class,'absensiTilawahMahasiswi'])->name('absensiTilawahMahasiswi');
 

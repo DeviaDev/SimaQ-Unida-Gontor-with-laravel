@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Absensis;
+use PhpOffice\PhpWord\TemplateProcessor;
 
 class AbsensiController extends Controller
 {
@@ -24,9 +25,13 @@ class AbsensiController extends Controller
 
         $query = DB::connection('mysql_siwak')->table('mahasiswi2');
 
-        if ($request->filled('prodi')) $query->where('prodi', $request->prodi);
-        if ($request->filled('semester')) $query->where('semester', $request->semester);
-        if ($request->filled('kelompok')) $query->where('kelompok', $request->kelompok);
+        $prodi    = $request->filled('prodi') ? trim($request->prodi) : null;
+        $semester = $request->filled('semester') ? trim($request->semester) : null;
+        $kelompok = $request->filled('kelompok') ? trim($request->kelompok) : null;
+
+        if ($prodi)    $query->where('prodi', $prodi);
+        if ($semester) $query->where('semester', $semester);
+        if ($kelompok) $query->where('kelompok', $kelompok);
 
         // SELECT DATA
         $query->select('mahasiswi2.id', 'mahasiswi2.nama', 'mahasiswi2.prodi', 'mahasiswi2.semester', 'mahasiswi2.kelompok');
@@ -75,7 +80,9 @@ class AbsensiController extends Controller
             'semester' => 'required',
             'kelompok' => 'required',
         ]);
-
+        $prodi    = trim($request->prodi);
+        $semester = trim($request->semester);
+        $kelompok = trim($request->kelompok);
         // Ambil mahasiswi sesuai filter
         $mahasiswi = DB::connection('mysql_siwak')
             ->table('mahasiswi2')
@@ -239,5 +246,123 @@ class AbsensiController extends Controller
             ->where('status', 'hadir')
             ->where('pertemuan', '>', 0)
             ->count();
+    }
+
+    public function export(Request $request)
+    {
+        $request->validate([
+            'prodi'      => 'required',
+            'semester'   => 'required',
+            'kelompok'   => 'required',
+            'pertemuan'  => 'required|array',
+            'bulan'      => 'required|integer|min:1|max:12',
+            'tgl1'       => 'nullable|date',
+            'tgl2'       => 'nullable|date',
+            'tgl3'       => 'nullable|date',
+            'tgl4'       => 'nullable|date',
+        ]);
+
+        $pertemuanDipilih = collect($request->pertemuan)
+            ->map(fn($p) => (int) $p)
+            ->sort()
+            ->values();
+
+        // Ambil data mahasiswi
+        $mahasiswi = DB::connection('mysql_siwak')
+            ->table('mahasiswi2')
+            ->where('prodi', $request->prodi)
+            ->where('semester', $request->semester)
+            ->where('kelompok', $request->kelompok)
+            ->orderBy('nama')
+            ->get();
+
+        $ids = $mahasiswi->pluck('id');
+
+        $absensis = DB::connection('mysql_siwak')
+            ->table('absensis')
+            ->whereIn('mahasiswi_id', $ids)
+            ->whereIn('pertemuan', $pertemuanDipilih)
+            ->get()
+            ->groupBy('mahasiswi_id');
+
+        // Template Word
+        $templatePath = storage_path('app/templates/absensi.docx');
+        $template = new TemplateProcessor($templatePath);
+        $namaBulan = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
+            4 => 'April', 5 => 'Mei', 6 => 'Juni',
+            7 => 'Juli', 8 => 'Agustus', 9 => 'September',
+            10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $template->setValue('bulan', strtoupper($namaBulan[$request->bulan]));
+        for ($i = 1; $i <= 4; $i++) {
+            if ($request->filled("tgl{$i}")) {
+                $template->setValue(
+                    "tgl{$i}",
+                    \Carbon\Carbon::parse($request->input("tgl{$i}"))->format('d-m-Y')
+                );
+            } else {
+                $template->setValue("tgl{$i}", '-');
+            }
+        }
+
+        $rows = [];
+
+        foreach ($mahasiswi as $i => $m) {
+            $total = 0;
+
+            $row = [
+                'no'       => $i + 1,
+                'nama'     => $m->nama,
+                'prodi'    => $m->prodi,
+                'semester' => $m->semester,
+            ];
+
+            // 🔥 PAKSA SELALU 4 SLOT
+            for ($slot = 1; $slot <= 4; $slot++) {
+
+                // default isi strip
+                $row["tgl{$slot}"] = '-';
+                $row["s{$slot}"]   = '-';
+
+                // kalau slot ini ada pertemuan yg dipilih
+                if (isset($pertemuanDipilih[$slot - 1])) {
+                    $p = $pertemuanDipilih[$slot - 1];
+
+                    if (isset($absensis[$m->id])) {
+                        foreach ($absensis[$m->id] as $a) {
+                            if ($a->pertemuan == $p) {
+                                $row["tgl{$slot}"] = \Carbon\Carbon::parse($a->tanggal)->format('d-m-Y');
+                                $row["s{$slot}"]   = $a->status;
+
+                                if ($a->status === 'hadir') {
+                                    $total++;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 🔥 INI BARIS PENTING YANG KURANG
+            $row['total'] = $total;
+
+            $rows[] = $row;
+        }
+
+        $template->cloneRowAndSetValues('no', $rows);
+
+        $fileName = 'absensi-' . now()->format('Ymd-His') . '.docx';
+        $outputPath = storage_path('app/temp/' . $fileName);
+
+        if (!file_exists(dirname($outputPath))) {
+            mkdir(dirname($outputPath), 0777, true);
+        }
+
+        $template->saveAs($outputPath);
+
+        return response()->download($outputPath)->deleteFileAfterSend(true);
     }
 }

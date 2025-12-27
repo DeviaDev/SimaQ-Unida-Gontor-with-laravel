@@ -34,7 +34,7 @@
                 @endphp
 
                 @foreach ($prodi as $p)
-                    <a href="?prodi={{ $p }}&semester={{ request('semester') }}"
+                    <a href="?prodi={{ trim($p) }}&semester={{ trim(request('semester')) }}"
                        class="btn btn-sm btn-outline-primary {{ request('prodi') == $p ? 'active' : '' }}">
                         {{ $p }}
                     </a>
@@ -49,7 +49,7 @@
 
             <div class="d-flex flex-wrap" style="gap: .5rem;">
                 @for ($s = 1; $s <= 8; $s++)
-                    <a href="?prodi={{ request('prodi') }}&semester={{ $s }}"
+                    <a href="?prodi={{ trim(request('prodi')) }}&semester={{ $s }}"
                        class="btn btn-sm btn-outline-success {{ request('semester') == $s ? 'active' : '' }}">
                         Semester {{ $s }}
                     </a>
@@ -65,9 +65,9 @@
 
                 <div class="d-flex flex-wrap" style="gap: .5rem;">
                     @foreach ($kelompokList as $k)
-                        <a href="?prodi={{ request('prodi') }}
-                                &semester={{ request('semester') }}
-                                &kelompok={{ $k }}"
+                        <a href="?prodi={{ trim(request('prodi')) }}
+                            &semester={{ trim(request('semester')) }}
+                            &kelompok={{ trim($k) }}"
                         class="btn btn-sm btn-outline-warning {{ request('kelompok') == $k ? 'active' : '' }}">
                             Kelompok {{ $k }}
                         </a>
@@ -279,12 +279,13 @@
             {{-- PUSH KE PERTEMUAN --}}
             @if($isComplete)
                 <div class="d-flex justify-content-end mt-3">
-                    <!-- <button
-                        type="button"
-                        class="btn btn-sm btn-secondary btn-refresh">
-                        <i class="fas fa-sync-alt mr-1"></i>
-                        Refresh Data
-                    </button> -->
+                    {{-- Tambahkan data-toggle dan data-target --}}
+                    <button type="button" 
+                            class="btn btn-sm btn-success mr-2" 
+                            data-toggle="modal" 
+                            data-target="#modalExport">
+                        <i class="fas fa-file-pdf mr-1"></i> Export
+                    </button>
                     <button
                         type="button"
                         class="btn btn-sm btn-primary btn-push">
@@ -313,6 +314,98 @@
             </span>
         </div>
     @endif
+</div>
+{{-- MODAL EXPORT PDF --}}
+<div class="modal fade" id="modalExport" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Export Absensi</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      {{-- 🔥 WAJIB ADA --}}
+      <div class="modal-body">
+        {{-- PILIH BULAN --}}
+        <div class="form-group">
+          <label class="font-weight-bold">
+            <i class="fas fa-calendar mr-1"></i> Bulan
+          </label>
+          <select class="form-control form-control-sm" id="bulan-export">
+            @php
+              $bulanList = [
+                1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
+                5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',
+                9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
+              ];
+            @endphp
+            @foreach($bulanList as $num=>$nama)
+              <option value="{{ $num }}">{{ $nama }}</option>
+            @endforeach
+          </select>
+        </div>
+        {{-- INPUT TANGGAL HEADER --}}
+        <div class="form-group">
+        <label class="font-weight-bold">
+        <i class="fas fa-calendar-alt mr-1"></i> Tanggal Header Tabel (Urut dari Kiri ke Kanan)
+        </label>
+
+        <div class="row">
+            @for($i=1;$i<=4;$i++)
+            <div class="col-6 mb-2">
+                <input type="date"
+                    class="form-control form-control-sm tanggal-header"
+                    data-slot="{{ $i }}"
+                    placeholder="Tanggal {{ $i }}"
+                    title="Tanggal {{ $i }} → kolom ke-{{ $i }} di tabel export">
+            </div>
+            @endfor
+        </div>
+
+        <small class="text-muted">
+            Maksimal 4 tanggal untuk header tabel Word
+        </small>
+        </div>
+        {{-- PILIH PERTEMUAN --}}
+        <div class="form-group">
+          <label class="font-weight-bold">Pertemuan</label>
+
+          <div class="custom-control custom-checkbox mb-2">
+            <input type="checkbox" class="custom-control-input" id="checkAllPertemuan">
+            <label class="custom-control-label" for="checkAllPertemuan">
+              Pilih Semua
+            </label>
+          </div>
+
+          <div class="row">
+            @for($i=1;$i<=12;$i++)
+              <div class="col-4 mb-2">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox"
+                         class="custom-control-input check-pertemuan"
+                         id="p{{ $i }}"
+                         value="{{ $i }}">
+                  <label class="custom-control-label" for="p{{ $i }}">
+                    Pertemuan {{ $i }}
+                  </label>
+                </div>
+              </div>
+            @endfor
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-dismiss="modal">Batal</button>
+        <button class="btn btn-success" id="btn-process-export">
+          Download
+        </button>
+      </div>
+
+    </div>
+  </div>
 </div>
 @push('scripts')
 <script>
@@ -524,9 +617,104 @@ function refreshData() {
         alert('Data berhasil direfresh dari database');
     });
 }
-// tombol refresh
-// document.querySelector('.btn-refresh')
-//     ?.addEventListener('click', refreshData);
+document.getElementById('checkAllPertemuan')?.addEventListener('change', function() {
+    const isChecked = this.checked;
+    document.querySelectorAll('.check-pertemuan').forEach(el => {
+        el.checked = isChecked;
+    });
+});
+
+// 2. Handle Klik Tombol Download
+document.getElementById('btn-process-export')?.addEventListener('click', function() {
+    
+    // Ambil pertemuan yang dipilih
+    const selected = [];
+    document.querySelectorAll('.check-pertemuan:checked').forEach(el => {
+        selected.push(el.value);
+    });
+
+    if (selected.length === 0) {
+        alert('Harap pilih minimal satu pertemuan!');
+        return;
+    }
+
+    // --- CARA BARU: BUAT FORM SEMENTARA & SUBMIT ---
+    // Ini menghindari error Blob dan Mixed Content
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = "{{ route('absensi.export') }}";
+    form.style.display = 'none';
+
+    // Tambahkan CSRF Token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = "{{ csrf_token() }}";
+    form.appendChild(csrfInput);
+
+    // Tambahkan Data Prodi, Semester, Kelompok
+    const prodiInput = document.createElement('input');
+    prodiInput.type = 'hidden';
+    prodiInput.name = 'prodi';
+    prodiInput.value = "{{ request('prodi') }}";
+    form.appendChild(prodiInput);
+
+    const smtInput = document.createElement('input');
+    smtInput.type = 'hidden';
+    smtInput.name = 'semester';
+    smtInput.value = "{{ request('semester') }}";
+    form.appendChild(smtInput);
+
+    const klpInput = document.createElement('input');
+    klpInput.type = 'hidden';
+    klpInput.name = 'kelompok';
+    klpInput.value = "{{ request('kelompok') }}";
+    form.appendChild(klpInput);
+
+    // Tambahkan Array Pertemuan (name="pertemuan[]")
+    selected.forEach(val => {
+        const pInput = document.createElement('input');
+        pInput.type = 'hidden';
+        pInput.name = 'pertemuan[]'; // Perhatikan kurung siku []
+        pInput.value = val;
+        form.appendChild(pInput);
+    });
+    // 🔥 Tambahkan Bulan
+    const bulan = document.getElementById('bulan-export').value;
+
+    const bulanInput = document.createElement('input');
+    bulanInput.type = 'hidden';
+    bulanInput.name = 'bulan';
+    bulanInput.value = bulan;
+    form.appendChild(bulanInput);
+
+    // 🔥 Ambil tanggal header (tgl1 - tgl4)
+    document.querySelectorAll('.tanggal-header').forEach(input => {
+        const slot = input.dataset.slot;
+        if (input.value) {
+            const tglInput = document.createElement('input');
+            tglInput.type = 'hidden';
+            tglInput.name = `tgl${slot}`;
+            tglInput.value = input.value;
+            form.appendChild(tglInput);
+        }
+    });
+
+    document.body.appendChild(form);
+
+    // 1️⃣ Tutup modal DULU
+    $('#modalExport').modal('hide');
+
+    // 2️⃣ Lepaskan fokus dari tombol (INI PENTING)
+    this.blur();
+
+    // 3️⃣ Baru submit (beri delay kecil biar modal benar-benar selesai)
+    setTimeout(() => {
+        form.submit();
+        document.body.removeChild(form);
+    }, 300);
+});
 </script>
 @endpush
 @endsection
