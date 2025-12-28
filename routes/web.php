@@ -10,6 +10,7 @@ use App\Http\Controllers\DokumentasiController;
 use App\Http\Controllers\AbsensiAnggotaController;
 use App\Http\Controllers\AbsensiPengurusController;
 use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\AbsensiMuhafidzohController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -125,6 +126,20 @@ Route::post('/absensi/refresh', [AbsensiController::class, 'refresh'])
 
 Route::post('/absensi/export', [AbsensiController::class, 'export'])
     ->name('absensi.export');
+
+// web.php
+
+// Route::get('/absensi/muhafidzoh', [AbsensiMuhafidzohController::class, 'index'])
+//     ->name('absensi.muhafidzoh');
+// Group Route Absensi Muhafidzoh
+Route::prefix('absensi-muhafidzoh')->name('absensi_muhafidzoh.')->group(function () {
+    Route::get('/', [AbsensiMuhafidzohController::class, 'index'])->name('index');
+    Route::post('/simpan', [AbsensiMuhafidzohController::class, 'simpan'])->name('simpan');
+    Route::post('/push', [AbsensiMuhafidzohController::class, 'pushPertemuan'])->name('push');
+    Route::post('/refresh', [AbsensiMuhafidzohController::class, 'refresh'])->name('refresh');
+    Route::post('/export', [AbsensiMuhafidzohController::class, 'export'])->name('export');
+});
+
 //tahsin
 Route::get('absensi/anggota/tilawah/mahasiswi', [AbsensiAnggotaController::class,'absensiTilawahMahasiswi'])->name('absensiTilawahMahasiswi');
 

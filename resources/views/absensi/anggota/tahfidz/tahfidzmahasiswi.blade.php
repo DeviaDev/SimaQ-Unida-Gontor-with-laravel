@@ -165,7 +165,7 @@
                 <thead class="thead-light">
                     <tr>
                         <th rowspan="2">No</th>
-                        <th rowspan="2" class="text-left">Nama</th>
+                        <th rowspan="2" class="text-center">Nama</th>
                         <th rowspan="2">Status Hari Ini</th>
                         <th rowspan="2">Tanggal</th>
 
@@ -613,8 +613,6 @@ function refreshData() {
                     ' total-hadir';
             }
         });
-
-        alert('Data berhasil direfresh dari database');
     });
 }
 document.getElementById('checkAllPertemuan')?.addEventListener('change', function() {

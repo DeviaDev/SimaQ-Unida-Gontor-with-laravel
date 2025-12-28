@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Mahasiswi2;
+use App\Models\Muhafidzoh;
 
 class AbsensiAnggotaController extends Controller
 {
@@ -55,17 +56,33 @@ class AbsensiAnggotaController extends Controller
         ]);
     }
 
+    public function absensiTahfidzMuhafidzoh(Request $request)
+    {
+        $query = Muhafidzoh::query();
 
-    public function absensiTahfidzMuhafidzoh(){
-        $data = array(
-            'title'         => 'Absensi Tahfidz Muhafidzoh',
+        // 🔎 Filter GEDUNG
+        if ($request->filled('gedung')) {
+            $query->where('gedung', $request->gedung);
+        }
+
+        // Data utama
+        $muhafidzoh = $query->orderBy('nama')->get();
+
+        // Dropdown daftar gedung
+        $gedungList = Muhafidzoh::select('gedung')
+            ->distinct()
+            ->orderBy('gedung')
+            ->pluck('gedung');
+
+        return view('absensi.anggota.tahfidz.tahfidzmuhafidzoh', [
+            'title' => 'Absensi Tahfidz Muhafidzoh',
+            'muhafidzoh' => $muhafidzoh,
             'menuAbsensiAnggota' => 'active',
             'menuAbsensiTahfidz' => 'active',
             'tahfidzmuhafidzoh' => 'active',
-        );
-        return view('absensi/anggota/tahfidz/tahfidzmuhafidzoh',$data);
+            'gedungList' => $gedungList,
+        ]);
     }
-
 
     public function absensiTilawahMahasiswi(){
         $data = array(
