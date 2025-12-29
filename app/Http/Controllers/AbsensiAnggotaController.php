@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\Mahasiswi2;
+use App\Models\Muhafidzoh;
 
 class AbsensiAnggotaController extends Controller
 {
@@ -14,28 +17,72 @@ class AbsensiAnggotaController extends Controller
         //
     }
 
+    public function absensiTahfidzMahasiswi(Request $request)
+    {
+        $query = Mahasiswi2::query();
 
-    public function absensiTahfidzMahasiswi(){
-        $data = array(
-            'title'         => 'Absensi Tahfidz Mahasiswi',
+        if (request('prodi')) {
+            $query->where('prodi', request('prodi'));
+        }
+
+        if (request('semester')) {
+            $query->where('semester', request('semester'));
+        }
+
+        if (request('kelompok')) {
+            $query->where('kelompok', request('kelompok'));
+        }
+
+        $mahasiswi2 = $query->get();
+
+        $kelompokList = [];
+
+        if (request('prodi') && request('semester')) {
+            $kelompokList = Mahasiswi2::where('prodi', request('prodi'))
+                ->where('semester', request('semester'))
+                ->select('kelompok')
+                ->distinct()
+                ->orderBy('kelompok')
+                ->pluck('kelompok');
+        }
+
+        return view('absensi.anggota.tahfidz.tahfidzmahasiswi', [
+            'title' => 'Absensi Tahfidz Mahasiswi',
+            'mahasiswi' => $mahasiswi2,
             'menuAbsensiAnggota' => 'active',
             'menuAbsensiTahfidz' => 'active',
             'tahfidzmahasiswi' => 'active',
-        );
-        return view('absensi.anggota.tahfidz.tahfidzmahasiswi
-',$data);
+            'kelompokList' => $kelompokList
+        ]);
     }
 
-    public function absensiTahfidzMuhafidzoh(){
-        $data = array(
-            'title'         => 'Absensi Tahfidz Muhafidzoh',
+    public function absensiTahfidzMuhafidzoh(Request $request)
+    {
+        $query = Muhafidzoh::query();
+
+        // 🔎 Filter GEDUNG
+        if ($request->filled('gedung')) {
+            $query->where('gedung', $request->gedung);
+        }
+
+        // Data utama
+        $muhafidzoh = $query->orderBy('nama')->get();
+
+        // Dropdown daftar gedung
+        $gedungList = Muhafidzoh::select('gedung')
+            ->distinct()
+            ->orderBy('gedung')
+            ->pluck('gedung');
+
+        return view('absensi.anggota.tahfidz.tahfidzmuhafidzoh', [
+            'title' => 'Absensi Tahfidz Muhafidzoh',
+            'muhafidzoh' => $muhafidzoh,
             'menuAbsensiAnggota' => 'active',
             'menuAbsensiTahfidz' => 'active',
             'tahfidzmuhafidzoh' => 'active',
-        );
-        return view('absensi/anggota/tahfidz/tahfidzmuhafidzoh',$data);
+            'gedungList' => $gedungList,
+        ]);
     }
-
 
     public function absensiTilawahMahasiswi(){
         $data = array(
