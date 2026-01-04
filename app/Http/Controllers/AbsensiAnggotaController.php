@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Mahasiswi2;
 use App\Models\Muhafidzoh;
+use App\Models\Mahatilawah;
 
 class AbsensiAnggotaController extends Controller
 {

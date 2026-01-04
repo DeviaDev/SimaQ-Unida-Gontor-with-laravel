@@ -408,6 +408,7 @@
   </div>
 </div>
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 console.log('SCRIPT LOAD');
 
@@ -450,7 +451,17 @@ function submitAbsensi(button, status) {
     .then(res => res.json())
     .then(data => {
         if (!data.success) {
-            alert('Gagal menyimpan');
+            if(typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Gagal menyimpan data absensi.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
             return;
         }
 
@@ -473,7 +484,13 @@ function submitAbsensi(button, status) {
                 ' total-hadir';
         }
     })
-    .catch(err => console.error(err));
+    .catch(err => {
+        console.error(err);
+        // Error jaringan
+        if(typeof Swal !== 'undefined') {
+             Swal.fire({ icon: 'error', title: 'Error Jaringan', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -502,66 +519,120 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Listener Tombol PUSH
+    // Listener Tombol PUSH (Update dengan SweetAlert & Promise)
     document.querySelector('.btn-push')?.addEventListener('click', function () {
+        
+        // 1. Ambil Data Pertemuan & Tanggal
+        const pertemuan = parseInt(document.getElementById('pertemuan-select').value);
+        const tanggal = document.getElementById('tanggal-absensi')?.value || null;
 
-            const pertemuan = parseInt(
-                document.getElementById('pertemuan-select').value
-            );
+        // Array untuk menampung semua proses fetch
+        let promises = [];
+        let count = 0; // Hitung berapa baris yang diproses
 
-            const tanggal = document.getElementById('tanggal-absensi')?.value || null;
+        // 2. Loop setiap baris data
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const group = row.querySelector('.attendance-btns');
+            if (!group) return;
 
-            document.querySelectorAll('tbody tr').forEach(row => {
-                const group = row.querySelector('.attendance-btns');
-                if (!group) return;
+            const activeBtn = group.querySelector('button.active');
+            if (!activeBtn) return; // Skip jika belum ada status yg dipilih
 
-                const activeBtn = group.querySelector('button.active');
-                if (!activeBtn) return;
+            const status = activeBtn.dataset.status;
+            const mahasiswiId = group.dataset.id;
+            const cells = row.querySelectorAll('.pertemuan-col');
 
-                const status = activeBtn.dataset.status;
-                const mahasiswiId = group.dataset.id;
-                const cells = row.querySelectorAll('.pertemuan-col');
+            count++; // Tambah counter
 
-                fetch("{{ route('absensi.push') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                    },
-                    body: JSON.stringify({
-                        mahasiswi_id: mahasiswiId,
-                        pertemuan: pertemuan,
-                        tanggal: tanggal,
-                        status: status
-                    })
+            // Masukkan fetch ke dalam variable promise
+            const request = fetch("{{ route('absensi.push') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    mahasiswi_id: mahasiswiId,
+                    pertemuan: pertemuan,
+                    tanggal: tanggal,
+                    status: status
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.success) return;
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) return;
 
-                    updateMeetingBadge(cells[pertemuan - 1], status);
+                // Update UI Badge Pertemuan
+                updateMeetingBadge(cells[pertemuan - 1], status);
 
-                    // 🔥 update kolom tanggal
-                    const allCells = row.querySelectorAll('td');
-                    const tanggalCell = allCells[3];
-                    if (tanggalCell && tanggal) {
-                        tanggalCell.innerHTML = `<span class="badge badge-info">${tanggal}</span>`;
-                    }
+                // Update Kolom Tanggal
+                const allCells = row.querySelectorAll('td');
+                const tanggalCell = allCells[3]; // Asumsi kolom ke-4 adalah tanggal
+                if (tanggalCell && tanggal) {
+                    tanggalCell.innerHTML = `<span class="badge badge-info">${tanggal}</span>`;
+                }
 
-                    // 🔥 set status aktif
-                    setActiveStatus(group, status);
-
-                    // update total hadir
-                    const totalBadge = row.querySelector('.total-hadir');
-                    if (totalBadge) {
-                        totalBadge.textContent = data.total_hadir;
-                        totalBadge.className =
-                            'badge ' +
-                            (data.total_hadir > 0 ? 'badge-success' : 'badge-secondary') +
-                            ' total-hadir';
-                    }
-                });
+                // Update Total Hadir
+                const totalBadge = row.querySelector('.total-hadir');
+                if (totalBadge) {
+                    totalBadge.textContent = data.total_hadir;
+                    totalBadge.className = 'badge ' + 
+                        (data.total_hadir > 0 ? 'badge-success' : 'badge-secondary') + 
+                        ' total-hadir';
+                }
             });
-        alert("Pertemuan " + pertemuan + " berhasil diisi");
+
+            promises.push(request);
+        });
+
+        // 3. Cek apakah ada data yang diproses
+        if (count === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tidak ada data',
+                text: 'Silakan isi status kehadiran mahasiswa terlebih dahulu.',
+            });
+            return;
+        }
+
+        // 4. Tampilkan Loading (Opsional tapi bagus untuk UX)
+        let timerInterval;
+        Swal.fire({
+            title: 'Sedang memproses...',
+            html: 'Mohon tunggu sebentar.',
+            timerProgressBar: true,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // 5. Tunggu semua fetch selesai, baru tampilkan SUKSES
+        Promise.all(promises).then(() => {
+            // Tutup loading & Tampilkan Toast Sukses
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            Toast.fire({
+                icon: 'success',
+                title: `Pertemuan ${pertemuan} berhasil disimpan!`
+            });
+        }).catch(err => {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Terjadi Kesalahan',
+                text: 'Gagal menyimpan sebagian data.'
+            });
+        });
     });
 });
 function refreshData() {
@@ -580,7 +651,17 @@ function refreshData() {
     .then(res => res.json())
     .then(res => {
         if (!res.success) {
-            alert('Gagal refresh data');
+            // ❌ HAPUS: alert('Gagal refresh data');
+            // ✅ GANTI JADI:
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Refresh',
+                text: 'Tidak dapat memuat data terbaru.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
             return;
         }
 
@@ -632,7 +713,14 @@ document.getElementById('btn-process-export')?.addEventListener('click', functio
     });
 
     if (selected.length === 0) {
-        alert('Harap pilih minimal satu pertemuan!');
+        // ❌ HAPUS: alert('Harap pilih minimal satu pertemuan!');
+        // ✅ GANTI JADI:
+        Swal.fire({
+            icon: 'warning',
+            title: 'Belum memilih pertemuan',
+            text: 'Harap centang minimal satu pertemuan untuk diexport.',
+            confirmButtonColor: '#f6c23e'
+        });
         return;
     }
 
