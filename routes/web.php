@@ -11,6 +11,9 @@ use App\Http\Controllers\AbsensiAnggotaController;
 use App\Http\Controllers\AbsensiPengurusController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\AbsensiMuhafidzohController;
+use App\Http\Controllers\TilawahMahasiswiController;
+use App\Http\Controllers\LaporanKegiatanController;
+use App\Http\Controllers\TilawahPengurusController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -101,11 +104,6 @@ Route::prefix('pengurus')->group(function () {
     Route::get('/pdf', [DataController::class, 'pdf1'])->name('pengurusPdf');
 });
 
-
-
-
-
-
 //absensi Anggota
 
 Route::get('/absensi/anggota/tahfidz/mahasiswi',[AbsensiAnggotaController::class, 'absensiTahfidzMahasiswi'])->name('absensiTahfidzMahasiswi');
@@ -127,11 +125,6 @@ Route::post('/absensi/refresh', [AbsensiController::class, 'refresh'])
 Route::post('/absensi/export', [AbsensiController::class, 'export'])
     ->name('absensi.export');
 
-// web.php
-
-// Route::get('/absensi/muhafidzoh', [AbsensiMuhafidzohController::class, 'index'])
-//     ->name('absensi.muhafidzoh');
-// Group Route Absensi Muhafidzoh
 Route::prefix('absensi-muhafidzoh')->name('absensi_muhafidzoh.')->group(function () {
     Route::get('/', [AbsensiMuhafidzohController::class, 'index'])->name('index');
     Route::post('/simpan', [AbsensiMuhafidzohController::class, 'simpan'])->name('simpan');
@@ -141,8 +134,17 @@ Route::prefix('absensi-muhafidzoh')->name('absensi_muhafidzoh.')->group(function
 });
 
 //tahsin
-Route::get('absensi/anggota/tilawah/mahasiswi', [AbsensiAnggotaController::class,'absensiTilawahMahasiswi'])->name('absensiTilawahMahasiswi');
+Route::get('/tilawah-mahasiswi', [TilawahMahasiswiController::class, 'index'])
+    ->name('absensiTilawahMahasiswi');
+Route::post('/tilawah-mahasiswi/simpan', [TilawahMahasiswiController::class, 'simpan'])->name('tilawah.simpan');
+// Tambahkan di bawah route simpan yang lama
+Route::post('/tilawah-mahasiswi/simpan-semua', [TilawahMahasiswiController::class, 'simpanSemua'])
+    ->name('tilawah.simpanSemua');
+Route::post('/tilawah-mahasiswi/export', [TilawahMahasiswiController::class, 'exportDocx'])
+    ->name('tilawah.export');
 
+
+// lain2
 Route::get('absensi/anggota/tilawah/muhafidzoh', [AbsensiAnggotaController::class,'absensiTilawahMuhafidzoh'])->name('absensiTilawahMuhafidzoh');
 
 Route::get('absensi/anggota/tilawah/staf', [AbsensiAnggotaController::class,'absensiTilawahStaf'])->name('absensiTilawahStaf');
@@ -150,11 +152,17 @@ Route::get('absensi/anggota/tilawah/staf', [AbsensiAnggotaController::class,'abs
 Route::get('absensi/anggota/tilawah/dosen', [AbsensiAnggotaController::class,'absensiTilawahDosen'])->name('absensiTilawahDosen');
 
 //absensi Pengurus
+Route::prefix('laporan-kegiatan')->group(function () {
+    Route::get('/', [LaporanKegiatanController::class, 'index'])->name('laporan.index');
+    Route::post('/store', [LaporanKegiatanController::class, 'store'])->name('laporan.store'); // Simpan Kegiatan Baru
+    Route::get('/{id}', [LaporanKegiatanController::class, 'show'])->name('laporan.show'); // Halaman Detail & Absen
+    Route::post('/update-absensi/{id}', [LaporanKegiatanController::class, 'updateAbsensi'])->name('laporan.update_absensi'); // Simpan Absen
+    Route::get('/export/{id}', [LaporanKegiatanController::class, 'export'])->name('laporan.export');
+});
 
-
-Route::get('/pengurus/lailatu', [AbsensiPengurusController::class,'pengurusLailatu'])->name('pengurusLailatu');
-
-Route::get('/pengurus/tilawah', [AbsensiPengurusController::class,'pengurusTilawah'])->name('pengurusTilawah');
+Route::get('/pengurus/tilawah', [TilawahPengurusController::class, 'index'])->name('pengurusTilawah');
+Route::post('/pengurus/tilawah/simpan', [TilawahPengurusController::class, 'simpanSemua'])->name('pengurus.tilawah.simpan');
+Route::post('/pengurus/tilawah/export', [TilawahPengurusController::class, 'exportDocx'])->name('pengurus.tilawah.export');
 
 Route::get('/pengurus/taujihat', [AbsensiPengurusController::class,'pengurusTaujihat'])->name('pengurusTaujihat');
 

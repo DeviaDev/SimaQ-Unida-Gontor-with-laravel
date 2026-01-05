@@ -57,19 +57,22 @@
             </div>
 
             {{-- Filter Kelompok --}}
-            @if(!empty($kelompokList) && count($kelompokList) > 0)
+            {{-- PERUBAHAN 1: Cek apakah list kelompok ada --}}
+            @if(isset($kelompokList) && count($kelompokList) > 0)
                 <h6 class="text-muted mt-4 mb-2">
                     <i class="fas fa-users mr-1"></i>
                     Filter Kelompok
                 </h6>
 
                 <div class="d-flex flex-wrap" style="gap: .5rem;">
+                    {{-- PERUBAHAN 2: Looping Objek KelompokLT --}}
                     @foreach ($kelompokList as $k)
+                        {{-- Gunakan id_kelompok untuk URL, kode_kelompok untuk Tampilan --}}
                         <a href="?prodi={{ trim(request('prodi')) }}
                             &semester={{ trim(request('semester')) }}
-                            &kelompok={{ trim($k) }}"
-                        class="btn btn-sm btn-outline-warning {{ request('kelompok') == $k ? 'active' : '' }}">
-                            Kelompok {{ $k }}
+                            &kelompok={{ $k->id_kelompok }}"
+                        class="btn btn-sm btn-outline-warning {{ request('kelompok') == $k->id_kelompok ? 'active' : '' }}">
+                            Kelompok {{ $k->kode_kelompok }}
                         </a>
                     @endforeach
                 </div>
@@ -104,9 +107,14 @@
                         @endif
 
                         @if(request('kelompok'))
+                            {{-- Tampilkan kode kelompok jika memungkinkan, atau ID sementara --}}
+                            @php
+                                $selectedK = $kelompokList->where('id_kelompok', request('kelompok'))->first();
+                                $labelK = $selectedK ? $selectedK->kode_kelompok : request('kelompok');
+                            @endphp
                             <a href="?prodi={{ request('prodi') }}&semester={{ request('semester') }}"
                             class="btn btn-sm btn-warning">
-                                Kelompok {{ request('kelompok') }} <span class="ml-1">&times;</span>
+                                Kelompok {{ $labelK }} <span class="ml-1">&times;</span>
                             </a>
                         @endif
                         <a href="{{ url()->current() }}"
@@ -189,12 +197,15 @@
                 @forelse($mahasiswi as $m)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td class="text-left">{{ $m->nama }}</td>
+                        
+                        {{-- PERUBAHAN 3: Ganti $m->nama jadi $m->nama_mahasiswi --}}
+                        <td class="text-left">{{ $m->nama_mahasiswi }}</td>
 
                         {{-- STATUS HARI INI --}}
                         <td>
+                            {{-- PERUBAHAN 4: Ganti $m->id jadi $m->id_mahasiswi --}}
                             <div class="btn-group btn-group-sm attendance-btns" 
-                                data-id="{{ $m->id }}"> 
+                                data-id="{{ $m->id_mahasiswi }}"> 
 
                                 <button type="button"
                                     class="btn btn-outline-success"
@@ -264,11 +275,13 @@
                         {{-- DATA TETAP ADA --}}
                         <input type="hidden" value="{{ $m->prodi }}">
                         <input type="hidden" value="{{ $m->semester }}">
-                        <input type="hidden" value="{{ $m->kelompok }}">
+                        
+                        {{-- PERUBAHAN 5: Ganti $m->kelompok jadi $m->id_kelompok --}}
+                        <input type="hidden" value="{{ $m->id_kelompok }}">
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-muted">
+                        <td colspan="17" class="text-muted">
                             Data tidak ditemukan
                         </td>
                     </tr>
@@ -408,6 +421,7 @@
   </div>
 </div>
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 console.log('SCRIPT LOAD');
 
@@ -430,7 +444,9 @@ function updateMeetingBadge(cell, status) {
 function submitAbsensi(button, status) {
     const group = button.closest('.attendance-btns');
     const row = group.closest('tr');
-    const mahasiswiId = group.dataset.id;
+    
+    // JS tidak perlu diubah, dia ambil dari data-id HTML yang sudah kita perbaiki
+    const mahasiswiId = group.dataset.id; 
 
     const inputTanggal = document.getElementById('tanggal-absensi');
     const tanggal = inputTanggal ? inputTanggal.value : null;
@@ -450,7 +466,17 @@ function submitAbsensi(button, status) {
     .then(res => res.json())
     .then(data => {
         if (!data.success) {
-            alert('Gagal menyimpan');
+            if(typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Gagal menyimpan data absensi.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
             return;
         }
 
@@ -473,7 +499,13 @@ function submitAbsensi(button, status) {
                 ' total-hadir';
         }
     })
-    .catch(err => console.error(err));
+    .catch(err => {
+        console.error(err);
+        // Error jaringan
+        if(typeof Swal !== 'undefined') {
+             Swal.fire({ icon: 'error', title: 'Error Jaringan', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -502,68 +534,123 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Listener Tombol PUSH
+    // Listener Tombol PUSH (Update dengan SweetAlert & Promise)
     document.querySelector('.btn-push')?.addEventListener('click', function () {
+        
+        // 1. Ambil Data Pertemuan & Tanggal
+        const pertemuan = parseInt(document.getElementById('pertemuan-select').value);
+        const tanggal = document.getElementById('tanggal-absensi')?.value || null;
 
-            const pertemuan = parseInt(
-                document.getElementById('pertemuan-select').value
-            );
+        // Array untuk menampung semua proses fetch
+        let promises = [];
+        let count = 0; // Hitung berapa baris yang diproses
 
-            const tanggal = document.getElementById('tanggal-absensi')?.value || null;
+        // 2. Loop setiap baris data
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const group = row.querySelector('.attendance-btns');
+            if (!group) return;
 
-            document.querySelectorAll('tbody tr').forEach(row => {
-                const group = row.querySelector('.attendance-btns');
-                if (!group) return;
+            const activeBtn = group.querySelector('button.active');
+            if (!activeBtn) return; // Skip jika belum ada status yg dipilih
 
-                const activeBtn = group.querySelector('button.active');
-                if (!activeBtn) return;
+            const status = activeBtn.dataset.status;
+            const mahasiswiId = group.dataset.id;
+            const cells = row.querySelectorAll('.pertemuan-col');
 
-                const status = activeBtn.dataset.status;
-                const mahasiswiId = group.dataset.id;
-                const cells = row.querySelectorAll('.pertemuan-col');
+            count++; // Tambah counter
 
-                fetch("{{ route('absensi.push') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                    },
-                    body: JSON.stringify({
-                        mahasiswi_id: mahasiswiId,
-                        pertemuan: pertemuan,
-                        tanggal: tanggal,
-                        status: status
-                    })
+            // Masukkan fetch ke dalam variable promise
+            const request = fetch("{{ route('absensi.push') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    mahasiswi_id: mahasiswiId,
+                    pertemuan: pertemuan,
+                    tanggal: tanggal,
+                    status: status
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.success) return;
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) return;
 
-                    updateMeetingBadge(cells[pertemuan - 1], status);
+                // Update UI Badge Pertemuan
+                updateMeetingBadge(cells[pertemuan - 1], status);
 
-                    // 🔥 update kolom tanggal
-                    const allCells = row.querySelectorAll('td');
-                    const tanggalCell = allCells[3];
-                    if (tanggalCell && tanggal) {
-                        tanggalCell.innerHTML = `<span class="badge badge-info">${tanggal}</span>`;
-                    }
+                // Update Kolom Tanggal
+                const allCells = row.querySelectorAll('td');
+                const tanggalCell = allCells[3]; // Asumsi kolom ke-4 adalah tanggal
+                if (tanggalCell && tanggal) {
+                    tanggalCell.innerHTML = `<span class="badge badge-info">${tanggal}</span>`;
+                }
 
-                    // 🔥 set status aktif
-                    setActiveStatus(group, status);
-
-                    // update total hadir
-                    const totalBadge = row.querySelector('.total-hadir');
-                    if (totalBadge) {
-                        totalBadge.textContent = data.total_hadir;
-                        totalBadge.className =
-                            'badge ' +
-                            (data.total_hadir > 0 ? 'badge-success' : 'badge-secondary') +
-                            ' total-hadir';
-                    }
-                });
+                // Update Total Hadir
+                const totalBadge = row.querySelector('.total-hadir');
+                if (totalBadge) {
+                    totalBadge.textContent = data.total_hadir;
+                    totalBadge.className = 'badge ' + 
+                        (data.total_hadir > 0 ? 'badge-success' : 'badge-secondary') + 
+                        ' total-hadir';
+                }
             });
-        alert("Pertemuan " + pertemuan + " berhasil diisi");
+
+            promises.push(request);
+        });
+
+        // 3. Cek apakah ada data yang diproses
+        if (count === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tidak ada data',
+                text: 'Silakan isi status kehadiran mahasiswa terlebih dahulu.',
+            });
+            return;
+        }
+
+        // 4. Tampilkan Loading (Opsional tapi bagus untuk UX)
+        let timerInterval;
+        Swal.fire({
+            title: 'Sedang memproses...',
+            html: 'Mohon tunggu sebentar.',
+            timerProgressBar: true,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // 5. Tunggu semua fetch selesai, baru tampilkan SUKSES
+        Promise.all(promises).then(() => {
+            // Tutup loading & Tampilkan Toast Sukses
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            Toast.fire({
+                icon: 'success',
+                title: `Pertemuan ${pertemuan} berhasil disimpan!`
+            });
+        }).catch(err => {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Terjadi Kesalahan',
+                text: 'Gagal menyimpan sebagian data.'
+            });
+        });
     });
 });
+// Di file blade, bagian refreshData()
 function refreshData() {
     fetch("{{ route('absensi.refresh') }}", {
         method: "POST",
@@ -572,15 +659,26 @@ function refreshData() {
             "X-CSRF-TOKEN": "{{ csrf_token() }}"
         },
         body: JSON.stringify({
-            prodi: "{{ request('prodi') }}",
-            semester: "{{ request('semester') }}",
-            kelompok: "{{ request('kelompok') }}"
+            // Tambahkan trim() di sini
+            prodi: "{{ trim(request('prodi')) }}", 
+            semester: "{{ trim(request('semester')) }}",
+            kelompok: "{{ trim(request('kelompok')) }}"
         })
     })
     .then(res => res.json())
     .then(res => {
         if (!res.success) {
-            alert('Gagal refresh data');
+            // ❌ HAPUS: alert('Gagal refresh data');
+            // ✅ GANTI JADI:
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Refresh',
+                text: 'Tidak dapat memuat data terbaru.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
             return;
         }
 
@@ -632,7 +730,14 @@ document.getElementById('btn-process-export')?.addEventListener('click', functio
     });
 
     if (selected.length === 0) {
-        alert('Harap pilih minimal satu pertemuan!');
+        // ❌ HAPUS: alert('Harap pilih minimal satu pertemuan!');
+        // ✅ GANTI JADI:
+        Swal.fire({
+            icon: 'warning',
+            title: 'Belum memilih pertemuan',
+            text: 'Harap centang minimal satu pertemuan untuk diexport.',
+            confirmButtonColor: '#f6c23e'
+        });
         return;
     }
 
@@ -715,7 +820,6 @@ document.getElementById('btn-process-export')?.addEventListener('click', functio
 });
 </script>
 @endpush
-@endsection
 <style>
 /* kalender transparan */
 .tanggal-picker {
@@ -792,5 +896,4 @@ td.total-hadir-col {
 }
 
 </style>
-
-
+@endsection

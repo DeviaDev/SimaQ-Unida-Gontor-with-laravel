@@ -20,8 +20,10 @@
             </h6>
 
             <div class="d-flex flex-wrap" style="gap:.5rem;">
+                {{-- PERHATIAN: Pastikan listGedung ini dikirim dari Controller atau tetap manual --}}
                 @php
-                    $listGedung = [
+                    // Jika controller mengirim $listGedung, pakai itu. Jika tidak, pakai manual.
+                    $listGedung = $listGedung ?? [
                         'Istanbul LT2', 'Istanbul LT3', 'Aula Unida', 'Musholla', 'Klaster'
                     ];
                 @endphp
@@ -120,13 +122,20 @@
                             @forelse($muhafidzoh as $m)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td class="text-left">{{ $m->nama }}</td>
-                                <td>{{ $m->ket ?? '-' }}</td>
-                                <td>{{ $m->kelompok ?? '-' }}</td>
+                                
+                                {{-- PERUBAHAN 1: nama -> nama_muhafidzoh --}}
+                                <td class="text-left">{{ $m->nama_muhafidzoh }}</td>
+                                
+                                {{-- PERUBAHAN 2: ket -> keterangan --}}
+                                <td>{{ $m->keterangan ?? '-' }}</td>
+                                
+                                {{-- PERUBAHAN 3: Ambil kode kelompok dari relasi --}}
+                                <td>{{ $m->kelompok->kode_kelompok ?? '-' }}</td>
 
                                 {{-- STATUS HARI INI (BUTTONS) --}}
                                 <td>
-                                    <div class="btn-group btn-group-sm attendance-btns" data-id="{{ $m->id }}">
+                                    {{-- PERUBAHAN 4: id -> id_muhafidzoh --}}
+                                    <div class="btn-group btn-group-sm attendance-btns" data-id="{{ $m->id_muhafidzoh }}">
                                         <button type="button" class="btn btn-outline-success" data-status="hadir">H</button>
                                         <button type="button" class="btn btn-outline-warning" data-status="izin">I</button>
                                         <button type="button" class="btn btn-outline-danger" data-status="alpha">A</button>
@@ -292,13 +301,28 @@
 </div>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     // --- KONFIGURASI AJAX ---
     const URL_SIMPAN  = "{{ route('absensi_muhafidzoh.simpan') }}";
     const URL_PUSH    = "{{ route('absensi_muhafidzoh.push') }}";
     const URL_REFRESH = "{{ route('absensi_muhafidzoh.refresh') }}";
-    const URL_EXPORT  = "{{ route('absensi_muhafidzoh.export') }}"; // Route baru
+    const URL_EXPORT  = "{{ route('absensi_muhafidzoh.export') }}"; 
     const CSRF_TOKEN  = "{{ csrf_token() }}";
+
+    // --- SETUP SWEETALERT TOAST ---
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
 
     // --- HELPER VISUAL ---
     function setActiveStatus(group, status) {
@@ -350,27 +374,58 @@
         .catch(err => console.error('Error fetching data:', err));
     }
 
-    // --- LOGIKA SIMPAN ---
+    // --- LOGIKA SIMPAN SATUAN ---
+    // --- LOGIKA SIMPAN SATUAN ---
     function submitAbsensi(button, status) {
         const group = button.closest('.attendance-btns');
         const row   = group.closest('tr');
         const id    = group.dataset.id; 
         const tgl   = document.getElementById('tanggal-absensi').value;
+        
+        // ✅ PERBAIKAN: Ambil nilai pertemuan dari dropdown
+        const pertemuan = document.getElementById('pertemuan-select').value; 
 
-        if(!tgl) { alert('Harap isi Tanggal terlebih dahulu!'); return; }
+        if(!tgl) { 
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tanggal Kosong',
+                text: 'Harap isi tanggal terlebih dahulu.',
+                confirmButtonColor: '#f6c23e'
+            });
+            return; 
+        }
 
         fetch(URL_SIMPAN, {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": CSRF_TOKEN },
-            body: JSON.stringify({ muhafidzoh_id: id, tanggal: tgl, status: status })
+            // ✅ PERBAIKAN: Kirim parameter 'pertemuan'
+            body: JSON.stringify({ 
+                muhafidzoh_id: id, 
+                tanggal: tgl, 
+                status: status,
+                pertemuan: pertemuan 
+            })
         })
         .then(res => res.json())
         .then(data => {
-            if (!data.success) { alert('Gagal menyimpan: ' + data.message); return; }
+            if (!data.success) { 
+                Swal.fire({ icon: 'error', title: 'Gagal', text: data.message }); 
+                return; 
+            }
+            // Update UI
             setActiveStatus(group, status);
             row.querySelector('.tanggal-col').textContent = tgl;
+            
+            // Update kolom pertemuan yang sesuai
+            const cells = row.querySelectorAll('.pertemuan-col');
+            const pIndex = parseInt(pertemuan) - 1;
+            if(cells[pIndex]) {
+                updateMeetingBadge(cells[pIndex], status);
+            }
+
             const totalEl = row.querySelector('.total-hadir');
             if(totalEl) totalEl.textContent = data.total_hadir;
+            if(totalEl) totalEl.className = 'badge ' + (data.total_hadir > 0 ? 'badge-success' : 'badge-secondary') + ' total-hadir';
         })
         .catch(err => console.error(err));
     }
@@ -392,7 +447,16 @@
             btn.addEventListener('click', function () {
                 const status = this.dataset.status;
                 const tgl = document.getElementById('tanggal-absensi').value;
-                if(!tgl) { alert('Isi tanggal dulu!'); return; }
+                
+                if(!tgl) { 
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Tanggal Kosong',
+                        text: 'Silakan isi tanggal terlebih dahulu.',
+                    });
+                    return; 
+                }
+
                 document.querySelectorAll('.attendance-btns').forEach(group => {
                     const button = group.querySelector(`[data-status="${status}"]`);
                     if (button) submitAbsensi(button, status);
@@ -400,23 +464,49 @@
             });
         });
 
-        // Listener Push Pertemuan
+        // --- LISTENER PUSH PERTEMUAN (TANPA KONFIRMASI) ---
         document.querySelector('.btn-push')?.addEventListener('click', function () {
             const p = document.getElementById('pertemuan-select').value;
             const tgl = document.getElementById('tanggal-absensi').value;
-            if(!tgl) { alert('Tanggal wajib diisi untuk Push!'); return; }
-            if(!confirm(`Yakin push data tanggal ${tgl} ke Pertemuan ${p}?`)) return;
+
+            // 1. Validasi Tanggal (Tetap Wajib)
+            if(!tgl) { 
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tanggal Kosong',
+                    text: 'Tanggal wajib diisi untuk melakukan Push data!',
+                });
+                return; 
+            }
+
+            // 2. LANGSUNG PROSES (Hapus Confirm, Langsung Loading)
+            Swal.fire({
+                title: 'Sedang Memproses...',
+                html: 'Mohon tunggu sebentar, data sedang disinkronisasi.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // 3. Proses Fetch All
+            let promises = [];
+            let count = 0;
 
             document.querySelectorAll('tbody tr').forEach(row => {
                 const group = row.querySelector('.attendance-btns');
                 if(!group) return;
+                
                 const activeBtn = group.querySelector('button.active');
-                if(!activeBtn) return; 
+                if(!activeBtn) return; // Skip jika status kosong
+                
+                count++;
                 const id = group.dataset.id;
                 const status = activeBtn.dataset.status;
                 const cells = row.querySelectorAll('.pertemuan-col');
 
-                fetch(URL_PUSH, {
+                // Push fetch request ke array promises
+                const request = fetch(URL_PUSH, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": CSRF_TOKEN },
                     body: JSON.stringify({ muhafidzoh_id: id, tanggal: tgl, status: status, pertemuan: p })
@@ -424,13 +514,32 @@
                 .then(res => res.json())
                 .then(data => {
                     if(data.success) {
+                        // Update UI Baris Tersebut
                         if(cells[p-1]) updateMeetingBadge(cells[p-1], status);
                         const totalEl = row.querySelector('.total-hadir');
                         if(totalEl) totalEl.textContent = data.total_hadir;
                     }
                 });
+
+                promises.push(request);
             });
-            alert('Proses Push berjalan di background.');
+
+            // 4. Cek apakah ada data
+            if (count === 0) {
+                Swal.fire('Info', 'Tidak ada data kehadiran aktif untuk dipush.', 'info');
+                return;
+            }
+
+            // 5. Tunggu semua selesai & Tampilkan Toast Sukses
+            Promise.all(promises).then(() => {
+                Toast.fire({
+                    icon: 'success',
+                    title: `Data berhasil dipush ke Pertemuan ${p}`
+                });
+            }).catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'Terjadi kesalahan saat memproses data.', 'error');
+            });
         });
 
         // --- LISTENER EXPORT ---
@@ -449,7 +558,11 @@
             });
 
             if (selected.length === 0) {
-                alert('Harap pilih minimal satu pertemuan!');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pilih Pertemuan',
+                    text: 'Harap centang minimal satu pertemuan untuk diexport.',
+                });
                 return;
             }
 
@@ -510,12 +623,20 @@
             });
 
             document.body.appendChild(form);
+            
+            // Tutup Modal & Submit
             $('#modalExport').modal('hide');
             this.blur();
 
             setTimeout(() => {
                 form.submit();
                 document.body.removeChild(form);
+                
+                // Opsional: Info download dimulai
+                Toast.fire({
+                    icon: 'info',
+                    title: 'Download dimulai...'
+                });
             }, 300);
         });
     });

@@ -9,17 +9,16 @@ class Absensis extends Model
 {
     use HasFactory;
 
-    // Sesuaikan dengan nama tabel di database kamu
-    protected $table = 'absensis'; 
-
-    // Kolom yang boleh diisi (mass assignment)
-    protected $fillable = [
-        'mahasiswi_id',
-        'tanggal',
-        'status',
-        'pertemuan',
-    ];
+    // HAPUS baris protected $connection = 'mysql_siwak'; jika ada!
     
-    // Atau bisa pakai guarded (kebalikan fillable)
-    // protected $guarded = ['id'];
+    // Sesuaikan nama tabel di db_admin_markaz
+    protected $table = 'absensis'; // Cek di phpMyAdmin, apakah 'absensi' atau 'absensis'? Sesuaikan.
+    
+    protected $guarded = ['id'];
+
+    // Relasi balik ke Mahasiswi (Penting untuk withCount di Controller)
+    public function mahasiswi()
+    {
+        return $this->belongsTo(Mahasiswi::class, 'id_mahasiswi', 'id_mahasiswi');
+    }
 }

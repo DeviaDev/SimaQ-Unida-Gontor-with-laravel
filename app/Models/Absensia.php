@@ -9,14 +9,19 @@ class Absensia extends Model
 {
     use HasFactory;
 
-    // Pastikan koneksi sesuai (mysql_siwak)
-    protected $connection = 'mysql_siwak'; 
-    protected $table = 'absensis_muhafidzoh';
+    protected $table = 'absensia';
     
+    // Pastikan koneksi menggunakan default (db_admin_markaz)
+    // Jika db_admin_markaz bukan default di .env, uncomment baris bawah:
+    // protected $connection = 'mysql_admin_markaz'; 
+
     protected $fillable = [
-        'muhafidzoh_id',
+        'id_mahasiswi', 
+        'id_muhafidzoh', // ✅ WAJIB DITAMBAHKAN
         'pertemuan',
         'tanggal',
-        'status'
+        'status',
     ];
+
+    public $timestamps = true; // Ubah ke true jika tabel absensia punya created_at/updated_at
 }
