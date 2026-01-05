@@ -112,11 +112,11 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Kegiatan:</h6>
-                        <a class="collapse-item {{ $pengurusLailatu ?? ''}}" href="{{ route('pengurusLailatu') }}">Malam Lailatu Tahfidz</a>
+                        
+                        <a class="collapse-item {{ $pengurusLailatu ?? ''}}" href="{{ route('lailatu.index') }}">Absensi Kegiatan</a>
+                        
                         <a class="collapse-item {{ $pengurusTilawah ?? ''}}" href="{{ route('pengurusTilawah') }}">Tilawah</a>
                         <a class="collapse-item {{ $pengurusTaujihat ?? ''}}" href="{{ route('pengurusTaujihat') }}">Taujihat</a>
-
-
                     </div>
                 </div>
             </li>

@@ -12,6 +12,7 @@ use App\Http\Controllers\AbsensiPengurusController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\AbsensiMuhafidzohController;
 use App\Http\Controllers\TilawahMahasiswiController;
+use App\Http\Controllers\PengurusAjaController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -142,7 +143,6 @@ Route::post('/tilawah-mahasiswi/export', [TilawahMahasiswiController::class, 'ex
     ->name('tilawah.export');
 
 
-    
 // lain2
 Route::get('absensi/anggota/tilawah/muhafidzoh', [AbsensiAnggotaController::class,'absensiTilawahMuhafidzoh'])->name('absensiTilawahMuhafidzoh');
 
@@ -151,9 +151,8 @@ Route::get('absensi/anggota/tilawah/staf', [AbsensiAnggotaController::class,'abs
 Route::get('absensi/anggota/tilawah/dosen', [AbsensiAnggotaController::class,'absensiTilawahDosen'])->name('absensiTilawahDosen');
 
 //absensi Pengurus
-
-
-Route::get('/pengurus/lailatu', [AbsensiPengurusController::class,'pengurusLailatu'])->name('pengurusLailatu');
+Route::get('/absensi/lailatu', [PengurusAjaController::class, 'index'])->name('lailatu.index');
+Route::post('/absensi/lailatu/store', [PengurusAjaController::class, 'store'])->name('lailatu.store');
 
 Route::get('/pengurus/tilawah', [AbsensiPengurusController::class,'pengurusTilawah'])->name('pengurusTilawah');
 
