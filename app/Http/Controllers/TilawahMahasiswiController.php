@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Mahasiswi2; 
+use App\Models\Mahasiswi; // ✅ PERBAIKAN: Pakai Model Mahasiswi yang Benar
 use App\Models\Mahatilawah; 
-// 👇 PENTING: Tambahkan ini untuk halaman (1, 2, 3) di leaderboard
+use App\Models\KelompokLT;
 use Illuminate\Pagination\LengthAwarePaginator; 
 use PhpOffice\PhpWord\TemplateProcessor;
 
@@ -22,37 +22,48 @@ class TilawahMahasiswiController extends Controller
         
         $mahasiswi = collect([]); 
         $kelompokList = [];
-        $leaderboard = null; // Siapkan variabel ini
+        $leaderboard = null;
 
         // 1. Ambil List Kelompok (Filter Logic)
         if ($hasProdi && $hasSemester) {
-            $kelompokList = Mahasiswi2::where('prodi', $request->prodi)
-                ->where('semester', $request->semester)
-                ->select('kelompok')
-                ->distinct()
-                ->orderBy('kelompok')
-                ->pluck('kelompok');
+            // Kita cari KelompokLT yang punya mahasiswi di prodi/smt tersebut
+            $kelompokList = KelompokLT::whereHas('mahasiswi', function($q) use ($request) {
+                $q->where('prodi', $request->prodi)
+                  ->where('semester', $request->semester);
+            })
+            ->orderBy('id_kelompok') 
+            ->get(); // ✅ PENTING: Pakai get() supaya dapat Object lengkap (id, nama, kode), JANGAN pluck()
         }
 
         // 2. KONDISI A: Filter Lengkap (Mode Input/Edit)
         if ($hasProdi && $hasSemester && $hasKelompok) {
-            $query = Mahasiswi2::query();
+            $query = Mahasiswi::query(); // ✅ Pakai Model Mahasiswi
+            
+            // Sertakan relasi 'kelompok' agar namanya muncul di view (opsional)
+            $query->with('kelompok'); 
+
             $query->where('prodi', $request->prodi);
             $query->where('semester', $request->semester);
-            $query->where('kelompok', $request->kelompok);
+            $query->where('id_kelompok', $request->kelompok); // ✅ Kolom DB: id_kelompok
             
-            $mahasiswi = $query->orderBy('nama')->get();
+            // ✅ Kolom DB: nama_mahasiswi
+            $mahasiswi = $query->orderBy('nama_mahasiswi')->get();
 
-            $ids = $mahasiswi->pluck('id');
-            $progress = DB::connection('mysql_siwak')
-                ->table('mahatahsin')
-                ->whereIn('mahasiswi_id', $ids)
+            // ✅ Kolom DB: id_mahasiswi
+            $ids = $mahasiswi->pluck('id_mahasiswi');
+
+            // Ambil data progress dari tabel 'mahatilawah'
+            $progress = DB::table('mahatilawah')
+                ->whereIn('id_mahasiswi', $ids) // ✅ Kolom DB: id_mahasiswi
                 ->get()
-                ->keyBy('mahasiswi_id');
+                ->keyBy('id_mahasiswi');
 
             foreach ($mahasiswi as $m) {
-                if (isset($progress[$m->id])) {
-                    $p = $progress[$m->id];
+                // Gunakan id_mahasiswi untuk kunci pencarian
+                $id = $m->id_mahasiswi;
+
+                if (isset($progress[$id])) {
+                    $p = $progress[$id];
                     $juzArray = $p->juz ? explode(',', $p->juz) : [];
                     $m->juz_sekarang_array = $juzArray;
                     $m->juz_count = count($juzArray);
@@ -64,30 +75,43 @@ class TilawahMahasiswiController extends Controller
                     $m->khatam_ke = 1;
                     $m->total_juz = 0;
                 }
+                
+                // Mapping agar view blade tidak error jika panggil $m->nama atau $m->id
+                $m->nama = $m->nama_mahasiswi; 
+                // (Untuk ID sudah aman karena Blade sudah kita ubah jadi id_mahasiswi sebelumnya)
             }
         } 
         // 3. KONDISI B: Filter Belum Lengkap (Mode Leaderboard)
         else {
-            // Ambil semua data ringkas
-            $allMahasiswi = Mahasiswi2::select('id', 'nama', 'prodi', 'semester', 'kelompok')->get();
-            $allProgress = DB::connection('mysql_siwak')->table('mahatahsin')->get()->keyBy('mahasiswi_id');
+            // Ambil semua data mahasiswi untuk leaderboard
+            $allMahasiswi = Mahasiswi::with('kelompok')
+                ->select('id_mahasiswi', 'nama_mahasiswi', 'prodi', 'semester', 'id_kelompok')
+                ->get();
+            
+            // Ambil semua data progress
+            $allProgress = DB::table('mahatilawah')->get()->keyBy('id_mahasiswi');
 
-            // Hitung total juz untuk semua
+            // Hitung total juz
             $ranked = $allMahasiswi->map(function($m) use ($allProgress) {
-                if (isset($allProgress[$m->id])) {
-                    $p = $allProgress[$m->id];
+                if (isset($allProgress[$m->id_mahasiswi])) {
+                    $p = $allProgress[$m->id_mahasiswi];
                     $juzCount = $p->juz ? count(explode(',', $p->juz)) : 0;
                     $m->total_juz = (($p->khatam_ke - 1) * 30) + $juzCount;
                 } else {
                     $m->total_juz = 0;
                 }
+                
+                // Mapping nama & kelompok
+                $m->nama = $m->nama_mahasiswi;
+                // ✅ Perbaikan Tampilan Kelompok Leaderboard
+                $namaKlp = $m->kelompok ? ($m->kelompok->nama_kelompok ?? $m->kelompok->kode_kelompok) : $m->id_kelompok;
+                $m->nama_kelompok_display = $namaKlp; 
+                
                 return $m;
             });
 
-            // Urutkan Tertinggi -> Terendah
+            // Urutkan & Paginasi
             $ranked = $ranked->sortByDesc('total_juz')->values();
-
-            // Paginasi Manual (10 per halaman)
             $currentPage = LengthAwarePaginator::resolveCurrentPage();
             $perPage = 10;
             $currentItems = $ranked->slice(($currentPage - 1) * $perPage, $perPage)->all();
@@ -100,106 +124,89 @@ class TilawahMahasiswiController extends Controller
             'title'            => $title,
             'mahasiswi'        => $mahasiswi,
             'kelompokList'     => $kelompokList,
-            'leaderboard'      => $leaderboard, // Kirim ke blade
+            'leaderboard'      => $leaderboard, // ✅ Pastikan variabel ini terkirim
             'menuAbsensiAnggota' => 'active',
             'menuAbsensiTilawah' => 'active',
             'tilawahmahasiswi'   => 'active',
         ]);
     }
 
-    // Fungsi simpanSemua TETAP SAMA (Tidak perlu diubah)
     public function simpanSemua(Request $request) {
-        // ... (Kode simpan kamu yang sudah benar) ...
         $data = $request->input('data'); 
         if (!$data || !is_array($data)) return response()->json(['success' => false], 400);
         
-        DB::connection('mysql_siwak')->beginTransaction();
+        DB::beginTransaction();
         try {
             foreach ($data as $item) {
+                // Pastikan key dari JS adalah 'mahasiswi_id'
                 if(isset($item['mahasiswi_id'])) {
                     $juzString = (isset($item['juz']) && is_array($item['juz'])) ? implode(',', $item['juz']) : '';
-                    DB::connection('mysql_siwak')->table('mahatahsin')->updateOrInsert(
-                        ['mahasiswi_id' => $item['mahasiswi_id']],
+                    
+                    DB::table('mahatilawah')->updateOrInsert(
+                        ['id_mahasiswi' => $item['mahasiswi_id']], // ✅ Kolom DB: id_mahasiswi
                         ['juz' => $juzString, 'khatam_ke' => $item['khatam_ke'], 'updated_at' => now()]
                     );
                 }
             }
-            DB::connection('mysql_siwak')->commit();
+            DB::commit();
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
-            DB::connection('mysql_siwak')->rollBack();
-            return response()->json(['success' => false], 500);
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
     public function exportDocx(Request $request)
     {
-        // 1. Validasi Input Modal
         $request->validate([
             'limit' => 'required|numeric|min:1',
             'bulan' => 'required|string',
         ]);
 
         $limit = $request->limit;
-        $bulan = $request->bulan;
-
-        // 2. Ambil Data & Hitung Total Juz (Logic sama seperti Index Leaderboard)
-        $allMahasiswi = Mahasiswi2::select('id', 'nama', 'prodi', 'semester')->get();
-        $allProgress = DB::connection('mysql_siwak')->table('mahatahsin')->get()->keyBy('mahasiswi_id');
+        
+        // ✅ Pakai Model Mahasiswi & Nama Kolom Benar
+        $allMahasiswi = Mahasiswi::select('id_mahasiswi', 'nama_mahasiswi', 'prodi', 'semester')->get();
+        $allProgress = DB::table('mahatilawah')->get()->keyBy('id_mahasiswi');
 
         $ranked = $allMahasiswi->map(function($m) use ($allProgress) {
-            if (isset($allProgress[$m->id])) {
-                $p = $allProgress[$m->id];
+            if (isset($allProgress[$m->id_mahasiswi])) {
+                $p = $allProgress[$m->id_mahasiswi];
                 $juzCount = $p->juz ? count(explode(',', $p->juz)) : 0;
                 $m->total_juz = (($p->khatam_ke - 1) * 30) + $juzCount;
             } else {
                 $m->total_juz = 0;
             }
+            $m->nama = $m->nama_mahasiswi;
             return $m;
         });
 
-        // 3. Urutkan Tertinggi dan Ambil Sesuai Limit
         $dataExport = $ranked->sortByDesc('total_juz')->take($limit)->values();
 
-        // 4. Proses Template Word
         try {
-            // 1. Arahkan ke file sesuai gambar kamu: storage/app/templates/mahatilawah.docx
             $templatePath = storage_path('app/templates/mahatilawah.docx');
             
             if (!file_exists($templatePath)) {
-                return back()->with('error', 'File template tidak ditemukan di: ' . $templatePath);
+                return back()->with('error', 'File template tidak ditemukan');
             }
 
             $templateProcessor = new TemplateProcessor($templatePath);
-
-            // 2. Set Variabel Judul (Bulan)
-            // Pastikan di Word kamu tulis: Laporan Bulan ${bulan}
             $templateProcessor->setValue('bulan', $request->bulan);
-
-            // 3. Clone Baris Tabel
-            // 'nama' adalah variabel patokan untuk copy baris
             $templateProcessor->cloneRow('nama', count($dataExport));
 
-            // 4. Isi Data ke Tabel
             foreach ($dataExport as $index => $item) {
-                $i = $index + 1; // Supaya nomor mulai dari 1
-                
-                // Masukkan data ke variabel ${...}
+                $i = $index + 1;
                 $templateProcessor->setValue('no#' . $i, $i);
                 $templateProcessor->setValue('nama#' . $i, $item->nama);
                 $templateProcessor->setValue('prodi#' . $i, $item->prodi);
                 $templateProcessor->setValue('smt#' . $i, $item->semester);
-                // Tambahkan kata "Juz" dibelakang angka
                 $templateProcessor->setValue('total#' . $i, $item->total_juz . ' Juz');
             }
 
-            // 5. Simpan file hasil sementara
             $fileName = 'Laporan_Tilawah_' . date('Ymd_His') . '.docx';
-            // Simpan sementara di folder storage/app/templates/ juga biar satu tempat
             $savePath = storage_path('app/templates/' . $fileName);
-            
             $templateProcessor->saveAs($savePath);
 
-            // 6. Download file lalu hapus dari server
             return response()->download($savePath)->deleteFileAfterSend(true);
 
         } catch (\Exception $e) {

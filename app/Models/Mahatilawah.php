@@ -9,10 +9,11 @@ class Mahatilawah extends Model
 {
     use HasFactory;
 
-    protected $connection = 'mysql_siwak'; 
+    // 👇 UPDATE: Sesuai instruksi
+    // protected $connection = 'db_admin_markaz'; 
     
-    // PENTING: Karena nama model 'Mahatilawah' tapi tabelnya 'mahatahsin'
-    protected $table = 'mahatahsin'; 
+    // 👇 UPDATE: Sesuai nama tabel baru
+    protected $table = 'mahatilawah'; 
 
     protected $fillable = [
         'mahasiswi_id',

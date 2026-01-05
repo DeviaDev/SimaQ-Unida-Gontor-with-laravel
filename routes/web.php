@@ -12,7 +12,8 @@ use App\Http\Controllers\AbsensiPengurusController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\AbsensiMuhafidzohController;
 use App\Http\Controllers\TilawahMahasiswiController;
-use App\Http\Controllers\PengurusAjaController;
+use App\Http\Controllers\LaporanKegiatanController;
+use App\Http\Controllers\TilawahPengurusController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -151,10 +152,17 @@ Route::get('absensi/anggota/tilawah/staf', [AbsensiAnggotaController::class,'abs
 Route::get('absensi/anggota/tilawah/dosen', [AbsensiAnggotaController::class,'absensiTilawahDosen'])->name('absensiTilawahDosen');
 
 //absensi Pengurus
-Route::get('/absensi/lailatu', [PengurusAjaController::class, 'index'])->name('lailatu.index');
-Route::post('/absensi/lailatu/store', [PengurusAjaController::class, 'store'])->name('lailatu.store');
+Route::prefix('laporan-kegiatan')->group(function () {
+    Route::get('/', [LaporanKegiatanController::class, 'index'])->name('laporan.index');
+    Route::post('/store', [LaporanKegiatanController::class, 'store'])->name('laporan.store'); // Simpan Kegiatan Baru
+    Route::get('/{id}', [LaporanKegiatanController::class, 'show'])->name('laporan.show'); // Halaman Detail & Absen
+    Route::post('/update-absensi/{id}', [LaporanKegiatanController::class, 'updateAbsensi'])->name('laporan.update_absensi'); // Simpan Absen
+    Route::get('/export/{id}', [LaporanKegiatanController::class, 'export'])->name('laporan.export');
+});
 
-Route::get('/pengurus/tilawah', [AbsensiPengurusController::class,'pengurusTilawah'])->name('pengurusTilawah');
+Route::get('/pengurus/tilawah', [TilawahPengurusController::class, 'index'])->name('pengurusTilawah');
+Route::post('/pengurus/tilawah/simpan', [TilawahPengurusController::class, 'simpanSemua'])->name('pengurus.tilawah.simpan');
+Route::post('/pengurus/tilawah/export', [TilawahPengurusController::class, 'exportDocx'])->name('pengurus.tilawah.export');
 
 Route::get('/pengurus/taujihat', [AbsensiPengurusController::class,'pengurusTaujihat'])->name('pengurusTaujihat');
 

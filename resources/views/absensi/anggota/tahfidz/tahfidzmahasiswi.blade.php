@@ -57,19 +57,22 @@
             </div>
 
             {{-- Filter Kelompok --}}
-            @if(!empty($kelompokList) && count($kelompokList) > 0)
+            {{-- PERUBAHAN 1: Cek apakah list kelompok ada --}}
+            @if(isset($kelompokList) && count($kelompokList) > 0)
                 <h6 class="text-muted mt-4 mb-2">
                     <i class="fas fa-users mr-1"></i>
                     Filter Kelompok
                 </h6>
 
                 <div class="d-flex flex-wrap" style="gap: .5rem;">
+                    {{-- PERUBAHAN 2: Looping Objek KelompokLT --}}
                     @foreach ($kelompokList as $k)
+                        {{-- Gunakan id_kelompok untuk URL, kode_kelompok untuk Tampilan --}}
                         <a href="?prodi={{ trim(request('prodi')) }}
                             &semester={{ trim(request('semester')) }}
-                            &kelompok={{ trim($k) }}"
-                        class="btn btn-sm btn-outline-warning {{ request('kelompok') == $k ? 'active' : '' }}">
-                            Kelompok {{ $k }}
+                            &kelompok={{ $k->id_kelompok }}"
+                        class="btn btn-sm btn-outline-warning {{ request('kelompok') == $k->id_kelompok ? 'active' : '' }}">
+                            Kelompok {{ $k->kode_kelompok }}
                         </a>
                     @endforeach
                 </div>
@@ -104,9 +107,14 @@
                         @endif
 
                         @if(request('kelompok'))
+                            {{-- Tampilkan kode kelompok jika memungkinkan, atau ID sementara --}}
+                            @php
+                                $selectedK = $kelompokList->where('id_kelompok', request('kelompok'))->first();
+                                $labelK = $selectedK ? $selectedK->kode_kelompok : request('kelompok');
+                            @endphp
                             <a href="?prodi={{ request('prodi') }}&semester={{ request('semester') }}"
                             class="btn btn-sm btn-warning">
-                                Kelompok {{ request('kelompok') }} <span class="ml-1">&times;</span>
+                                Kelompok {{ $labelK }} <span class="ml-1">&times;</span>
                             </a>
                         @endif
                         <a href="{{ url()->current() }}"
@@ -189,12 +197,15 @@
                 @forelse($mahasiswi as $m)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td class="text-left">{{ $m->nama }}</td>
+                        
+                        {{-- PERUBAHAN 3: Ganti $m->nama jadi $m->nama_mahasiswi --}}
+                        <td class="text-left">{{ $m->nama_mahasiswi }}</td>
 
                         {{-- STATUS HARI INI --}}
                         <td>
+                            {{-- PERUBAHAN 4: Ganti $m->id jadi $m->id_mahasiswi --}}
                             <div class="btn-group btn-group-sm attendance-btns" 
-                                data-id="{{ $m->id }}"> 
+                                data-id="{{ $m->id_mahasiswi }}"> 
 
                                 <button type="button"
                                     class="btn btn-outline-success"
@@ -264,11 +275,13 @@
                         {{-- DATA TETAP ADA --}}
                         <input type="hidden" value="{{ $m->prodi }}">
                         <input type="hidden" value="{{ $m->semester }}">
-                        <input type="hidden" value="{{ $m->kelompok }}">
+                        
+                        {{-- PERUBAHAN 5: Ganti $m->kelompok jadi $m->id_kelompok --}}
+                        <input type="hidden" value="{{ $m->id_kelompok }}">
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-muted">
+                        <td colspan="17" class="text-muted">
                             Data tidak ditemukan
                         </td>
                     </tr>
@@ -431,7 +444,9 @@ function updateMeetingBadge(cell, status) {
 function submitAbsensi(button, status) {
     const group = button.closest('.attendance-btns');
     const row = group.closest('tr');
-    const mahasiswiId = group.dataset.id;
+    
+    // JS tidak perlu diubah, dia ambil dari data-id HTML yang sudah kita perbaiki
+    const mahasiswiId = group.dataset.id; 
 
     const inputTanggal = document.getElementById('tanggal-absensi');
     const tanggal = inputTanggal ? inputTanggal.value : null;
@@ -635,6 +650,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+// Di file blade, bagian refreshData()
 function refreshData() {
     fetch("{{ route('absensi.refresh') }}", {
         method: "POST",
@@ -643,9 +659,10 @@ function refreshData() {
             "X-CSRF-TOKEN": "{{ csrf_token() }}"
         },
         body: JSON.stringify({
-            prodi: "{{ request('prodi') }}",
-            semester: "{{ request('semester') }}",
-            kelompok: "{{ request('kelompok') }}"
+            // Tambahkan trim() di sini
+            prodi: "{{ trim(request('prodi')) }}", 
+            semester: "{{ trim(request('semester')) }}",
+            kelompok: "{{ trim(request('kelompok')) }}"
         })
     })
     .then(res => res.json())
@@ -803,7 +820,6 @@ document.getElementById('btn-process-export')?.addEventListener('click', functio
 });
 </script>
 @endpush
-@endsection
 <style>
 /* kalender transparan */
 .tanggal-picker {
@@ -880,5 +896,4 @@ td.total-hadir-col {
 }
 
 </style>
-
-
+@endsection

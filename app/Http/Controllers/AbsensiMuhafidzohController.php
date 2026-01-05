@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Muhafidzoh;
+use App\Models\Absensia;
+use App\Models\Tempat;
 use PhpOffice\PhpWord\TemplateProcessor;
+use Carbon\Carbon;
 
 class AbsensiMuhafidzohController extends Controller
 {
@@ -17,53 +20,60 @@ class AbsensiMuhafidzohController extends Controller
         $hasGedung = !empty($gedung);
 
         if (!$hasGedung) {
+            // Ambil list gedung untuk filter dropdown
+            $gedungList = Tempat::distinct()->pluck('nama_tempat');
+
             return view('absensi.anggota.tahfidz.tahfidzmuhafidzoh', [
                 'title' => $title,
                 'muhafidzoh' => [],
-                'hasGedung' => false
+                'hasGedung' => false,
+                'gedungList' => $gedungList
             ]);
         }
 
-        $muhafidzoh = DB::connection('mysql_siwak')
-            ->table('muhafidzoh2')
-            ->where('gedung', $gedung)
-            ->orderBy('nama', 'asc')
+        // 1. Ambil Data Muhafidzoh + Relasi (Gunakan Model)
+        $muhafidzoh = Muhafidzoh::with(['kelompok', 'tempat'])
+            ->whereHas('tempat', function($q) use ($gedung) {
+                $q->where('nama_tempat', $gedung);
+            })
+            ->orderBy('nama_muhafidzoh', 'asc') // Sesuaikan kolom: nama_muhafidzoh
             ->get();
 
-        $ids = $muhafidzoh->pluck('id');
+        $ids = $muhafidzoh->pluck('id_muhafidzoh'); // Sesuaikan kolom: id_muhafidzoh
 
-        // Ambil riwayat dari tabel absensia
-        $riwayatAbsensi = DB::connection('mysql_siwak')
-            ->table('absensia')
-            ->select('muhafidzoh_id', 'pertemuan', 'status')
-            ->whereIn('muhafidzoh_id', $ids)
+        // 2. Ambil riwayat dari tabel absensia
+        $riwayatAbsensi = Absensia::whereIn('id_muhafidzoh', $ids) // Sesuaikan: id_muhafidzoh
             ->where('pertemuan', '>', 0)
             ->get()
-            ->groupBy('muhafidzoh_id');
+            ->groupBy('id_muhafidzoh');
 
-        // Hitung total hadir
-        $totalHadirData = DB::connection('mysql_siwak')
-            ->table('absensia')
-            ->select('muhafidzoh_id', DB::raw('count(*) as total'))
-            ->whereIn('muhafidzoh_id', $ids)
+        // 3. Hitung total hadir
+        $totalHadirData = Absensia::select('id_muhafidzoh', DB::raw('count(*) as total'))
+            ->whereIn('id_muhafidzoh', $ids)
             ->where('status', 'hadir')
             ->where('pertemuan', '>', 0)
-            ->groupBy('muhafidzoh_id')
-            ->pluck('total', 'muhafidzoh_id');
+            ->groupBy('id_muhafidzoh')
+            ->pluck('total', 'id_muhafidzoh');
 
+        // 4. Map data ke object Muhafidzoh
         foreach ($muhafidzoh as $m) {
-            if (isset($riwayatAbsensi[$m->id])) {
-                $m->riwayat = $riwayatAbsensi[$m->id]->pluck('status', 'pertemuan')->toArray();
+            $id = $m->id_muhafidzoh;
+            if (isset($riwayatAbsensi[$id])) {
+                $m->riwayat = $riwayatAbsensi[$id]->pluck('status', 'pertemuan')->toArray();
             } else {
                 $m->riwayat = [];
             }
-            $m->total_hadir = $totalHadirData[$m->id] ?? 0;
+            $m->total_hadir = $totalHadirData[$id] ?? 0;
         }
+
+        // Ambil list gedung lagi agar filter tetap muncul
+        $gedungList = Tempat::distinct()->pluck('nama_tempat');
 
         return view('absensi.anggota.tahfidz.tahfidzmuhafidzoh', [
             'title'      => $title,
             'muhafidzoh' => $muhafidzoh,
-            'hasGedung'  => true
+            'hasGedung'  => true,
+            'gedungList' => $gedungList
         ]);
     }
 
@@ -72,36 +82,32 @@ class AbsensiMuhafidzohController extends Controller
     {
         $gedung = $request->gedung;
         
-        // 1. Ambil data muhafidzoh berdasarkan gedung
-        $muhafidzoh = DB::connection('mysql_siwak')
-            ->table('muhafidzoh2')
-            ->where('gedung', $gedung)
-            ->get();
+        // 1. Ambil ID muhafidzoh berdasarkan gedung (via Model)
+        $muhafidzohIds = Muhafidzoh::whereHas('tempat', function($q) use ($gedung) {
+                $q->where('nama_tempat', $gedung);
+            })
+            ->pluck('id_muhafidzoh');
 
-        $ids = $muhafidzoh->pluck('id');
-
-        // 2. Ambil semua absensi mereka (yang sudah dipush/pertemuan > 0)
-        $absensis = DB::connection('mysql_siwak')
-            ->table('absensia')
-            ->whereIn('muhafidzoh_id', $ids)
+        // 2. Ambil semua absensi mereka
+        $absensis = Absensia::whereIn('id_muhafidzoh', $muhafidzohIds)
             ->where('pertemuan', '>', 0)
             ->get();
 
         // 3. Format data untuk JSON
         $result = [];
-        foreach ($muhafidzoh as $m) {
-            $result[$m->id] = [
+        foreach ($muhafidzohIds as $id) {
+            $result[$id] = [
                 'riwayat' => [],
                 'total_hadir' => 0
             ];
             
-            $myAbsen = $absensis->where('muhafidzoh_id', $m->id);
+            $myAbsen = $absensis->where('id_muhafidzoh', $id);
             
             foreach($myAbsen as $a) {
                 $p = (int)$a->pertemuan;
-                $result[$m->id]['riwayat'][$p] = $a->status;
+                $result[$id]['riwayat'][$p] = $a->status;
                 if ($a->status == 'hadir') {
-                    $result[$m->id]['total_hadir']++;
+                    $result[$id]['total_hadir']++;
                 }
             }
         }
@@ -109,43 +115,44 @@ class AbsensiMuhafidzohController extends Controller
         return response()->json(['success' => true, 'data' => $result]);
     }
 
+    // --- SIMPAN SATUAN (AJAX) ---
     public function simpan(Request $request)
     {
         $request->validate([
-            'muhafidzoh_id' => 'required|integer',
+            'muhafidzoh_id' => 'required',
             'tanggal'       => 'required|date',
             'status'        => 'required|in:hadir,izin,alpha'
         ]);
 
-        DB::connection('mysql_siwak')->beginTransaction();
+        DB::beginTransaction();
         try {
-            $existing = DB::connection('mysql_siwak')
-                ->table('absensia')
-                ->where('muhafidzoh_id', $request->muhafidzoh_id)
+            // Cek data lama untuk mempertahankan nilai pertemuan jika ada
+            $existing = Absensia::where('id_muhafidzoh', $request->muhafidzoh_id)
                 ->where('tanggal', $request->tanggal)
                 ->first();
 
             $pertemuanExisting = $existing ? $existing->pertemuan : 0;
+            // Jika ada kiriman pertemuan dari request (saat push), pakai itu
+            if ($request->has('pertemuan')) {
+                $pertemuanExisting = $request->pertemuan;
+            }
 
-            DB::connection('mysql_siwak')
-                ->table('absensia')
-                ->updateOrInsert(
-                    [
-                        'muhafidzoh_id' => $request->muhafidzoh_id,
-                        'tanggal'       => $request->tanggal,
-                    ],
-                    [
-                        'status'     => $request->status,
-                        'pertemuan'  => $pertemuanExisting,
-                        'updated_at' => now(),
-                    ]
-                );
+            // Gunakan updateOrCreate pada Model Absensia
+            Absensia::updateOrCreate(
+                [
+                    'id_muhafidzoh' => $request->muhafidzoh_id,
+                    'tanggal'       => $request->tanggal,
+                ],
+                [
+                    'status'    => $request->status,
+                    'pertemuan' => $pertemuanExisting
+                ]
+            );
 
-            DB::connection('mysql_siwak')->commit();
+            DB::commit();
 
-            $totalHadir = DB::connection('mysql_siwak')
-                ->table('absensia')
-                ->where('muhafidzoh_id', $request->muhafidzoh_id)
+            // Hitung Total Hadir Realtime
+            $totalHadir = Absensia::where('id_muhafidzoh', $request->muhafidzoh_id)
                 ->where('status', 'hadir')
                 ->where('pertemuan', '>', 0)
                 ->count();
@@ -156,23 +163,23 @@ class AbsensiMuhafidzohController extends Controller
             ]);
 
         } catch (\Throwable $e) {
-            DB::connection('mysql_siwak')->rollBack();
+            DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
+    // --- PUSH PERTEMUAN (AJAX) ---
     public function pushPertemuan(Request $request)
     {
         $request->validate([
-            'muhafidzoh_id' => 'required|integer',
+            'muhafidzoh_id' => 'required',
             'tanggal'       => 'required|date',
             'status'        => 'required|in:hadir,izin,alpha',
             'pertemuan'     => 'required|integer|min:1|max:12',
         ]);
 
-        $isExist = DB::connection('mysql_siwak')
-            ->table('absensia')
-            ->where('muhafidzoh_id', $request->muhafidzoh_id)
+        // Cek apakah pertemuan ini sudah dipakai di tanggal lain oleh orang yang sama
+        $isExist = Absensia::where('id_muhafidzoh', $request->muhafidzoh_id)
             ->where('pertemuan', $request->pertemuan)
             ->where('tanggal', '!=', $request->tanggal)
             ->exists();
@@ -184,23 +191,23 @@ class AbsensiMuhafidzohController extends Controller
             ], 400);
         }
 
-        DB::connection('mysql_siwak')->beginTransaction();
+        DB::beginTransaction();
         try {
-            DB::connection('mysql_siwak')
-                ->table('absensia')
-                ->where('muhafidzoh_id', $request->muhafidzoh_id)
-                ->where('tanggal', $request->tanggal)
-                ->update([
-                    'pertemuan'  => $request->pertemuan,
-                    'status'     => $request->status,
-                    'updated_at' => now()
-                ]);
+            // Update atau Create data absensi dengan pertemuan yang dipush
+            Absensia::updateOrCreate(
+                [
+                    'id_muhafidzoh' => $request->muhafidzoh_id,
+                    'tanggal'       => $request->tanggal,
+                ],
+                [
+                    'pertemuan' => $request->pertemuan,
+                    'status'    => $request->status
+                ]
+            );
 
-            DB::connection('mysql_siwak')->commit();
+            DB::commit();
 
-            $totalHadir = DB::connection('mysql_siwak')
-                ->table('absensia')
-                ->where('muhafidzoh_id', $request->muhafidzoh_id)
+            $totalHadir = Absensia::where('id_muhafidzoh', $request->muhafidzoh_id)
                 ->where('status', 'hadir')
                 ->where('pertemuan', '>', 0)
                 ->count();
@@ -211,17 +218,19 @@ class AbsensiMuhafidzohController extends Controller
             ]);
 
         } catch (\Throwable $e) {
-            DB::connection('mysql_siwak')->rollBack();
+            DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+    // --- EXPORT WORD ---
     public function export(Request $request)
     {
         $request->validate([
             'gedung'      => 'required',
             'pertemuan'   => 'required|array',
             'bulan'       => 'required|integer|min:1|max:12',
-            'tanpa_staf'  => 'nullable|in:0,1', // Validasi input checkbox baru
+            'tanpa_staf'  => 'nullable|in:0,1',
             'tgl1'        => 'nullable|date',
             'tgl2'        => 'nullable|date',
             'tgl3'        => 'nullable|date',
@@ -233,34 +242,31 @@ class AbsensiMuhafidzohController extends Controller
             ->sort()
             ->values();
 
-        // 1. Query Muhafidzoh
-        $query = DB::connection('mysql_siwak')
-            ->table('muhafidzoh2')
-            ->where('gedung', $request->gedung);
+        // 1. Query Muhafidzoh via Model
+        $query = Muhafidzoh::with(['tempat', 'kelompok'])
+            ->whereHas('tempat', function($q) use ($request) {
+                $q->where('nama_tempat', $request->gedung);
+            });
 
-        // 🔥 LOGIKA EXPORT TANPA STAF 🔥
+        // 🔥 Filter Tanpa Staf (Menggunakan kolom 'keterangan')
         if ($request->tanpa_staf == '1') {
-            $query->where('ket', '!=', 'STAF');
+            $query->where('keterangan', '!=', 'STAF');
         }
 
-        $muhafidzoh = $query->orderBy('nama')->get();
-        $ids = $muhafidzoh->pluck('id');
+        $muhafidzoh = $query->orderBy('nama_muhafidzoh')->get();
+        $ids = $muhafidzoh->pluck('id_muhafidzoh');
 
         // 2. Ambil Data Absensi
-        $absensis = DB::connection('mysql_siwak')
-            ->table('absensia') // Pastikan nama tabel benar
-            ->whereIn('muhafidzoh_id', $ids)
+        $absensis = Absensia::whereIn('id_muhafidzoh', $ids)
             ->whereIn('pertemuan', $pertemuanDipilih)
             ->get()
-            ->groupBy('muhafidzoh_id');
+            ->groupBy('id_muhafidzoh');
 
         // 3. Load Template
-        // Path sesuai request: storage/app/absensia.docx
         $templatePath = storage_path('app/templates/absensia.docx'); 
         
-        // Cek file ada tidak
         if (!file_exists($templatePath)) {
-            return back()->with('error', 'File template absensia.docx tidak ditemukan di storage/app/');
+            return back()->with('error', 'File template absensia.docx tidak ditemukan di storage/app/templates/');
         }
 
         $template = new TemplateProcessor($templatePath);
@@ -274,12 +280,12 @@ class AbsensiMuhafidzohController extends Controller
         ];
         $template->setValue('bulan', strtoupper($namaBulan[$request->bulan]));
 
-        // Mapping Header Tanggal (tgl1 - tgl4)
+        // Mapping Header Tanggal
         for ($i = 1; $i <= 4; $i++) {
             if ($request->filled("tgl{$i}")) {
                 $template->setValue(
                     "tgl{$i}",
-                    \Carbon\Carbon::parse($request->input("tgl{$i}"))->format('d-m-Y')
+                    Carbon::parse($request->input("tgl{$i}"))->format('d-m-Y')
                 );
             } else {
                 $template->setValue("tgl{$i}", '-');
@@ -292,28 +298,22 @@ class AbsensiMuhafidzohController extends Controller
             $total = 0;
             $row = [
                 'no'   => $i + 1,
-                'nama' => $m->nama,
-                'ket'  => $m->ket ?? '-', // Mengisi variabel ${ket} di template
+                'nama' => $m->nama_muhafidzoh, // ✅ PENTING: Sesuai nama kolom DB
+                'ket'  => $m->keterangan ?? '-', // ✅ PENTING: Sesuai nama kolom DB
             ];
 
-            // Loop 4 Slot Pertemuan untuk Header
+            // Loop 4 Slot Pertemuan untuk Kolom di Word
             for ($slot = 1; $slot <= 4; $slot++) {
-                // Default value
                 $row["s{$slot}"] = '-';
 
-                // Cek apakah slot ini dipilih user (dari checkbox pertemuan)
-                // Contoh: user pilih pertemuan [1, 3]. 
-                // Slot 1 = Pertemuan 1. Slot 2 = Pertemuan 3.
                 if (isset($pertemuanDipilih[$slot - 1])) {
                     $p = $pertemuanDipilih[$slot - 1];
+                    $id = $m->id_muhafidzoh;
 
-                    // Cek absensi orang ini
-                    if (isset($absensis[$m->id])) {
-                        $absenItem = $absensis[$m->id]->firstWhere('pertemuan', $p);
+                    if (isset($absensis[$id])) {
+                        $absenItem = $absensis[$id]->firstWhere('pertemuan', $p);
                         
                         if ($absenItem) {
-                            // Konversi status jadi inisial (opsional, atau full text)
-                            // Jika mau 'H', 'I', 'A' ganti baris ini:
                             $statusMap = ['hadir'=>'H', 'izin'=>'I', 'alpha'=>'A'];
                             $row["s{$slot}"] = $statusMap[$absenItem->status] ?? '-'; 
 
@@ -330,7 +330,6 @@ class AbsensiMuhafidzohController extends Controller
         }
 
         // 5. Clone Row dan Isi Data
-        // Pastikan di template Word variabelnya: ${no}, ${nama}, ${ket}, ${s1}, ${s2}, ${s3}, ${s4}, ${total}
         $template->cloneRowAndSetValues('no', $rows);
 
         // 6. Simpan & Download

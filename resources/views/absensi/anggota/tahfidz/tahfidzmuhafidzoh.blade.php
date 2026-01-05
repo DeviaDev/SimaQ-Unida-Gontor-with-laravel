@@ -20,8 +20,10 @@
             </h6>
 
             <div class="d-flex flex-wrap" style="gap:.5rem;">
+                {{-- PERHATIAN: Pastikan listGedung ini dikirim dari Controller atau tetap manual --}}
                 @php
-                    $listGedung = [
+                    // Jika controller mengirim $listGedung, pakai itu. Jika tidak, pakai manual.
+                    $listGedung = $listGedung ?? [
                         'Istanbul LT2', 'Istanbul LT3', 'Aula Unida', 'Musholla', 'Klaster'
                     ];
                 @endphp
@@ -120,13 +122,20 @@
                             @forelse($muhafidzoh as $m)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td class="text-left">{{ $m->nama }}</td>
-                                <td>{{ $m->ket ?? '-' }}</td>
-                                <td>{{ $m->kelompok ?? '-' }}</td>
+                                
+                                {{-- PERUBAHAN 1: nama -> nama_muhafidzoh --}}
+                                <td class="text-left">{{ $m->nama_muhafidzoh }}</td>
+                                
+                                {{-- PERUBAHAN 2: ket -> keterangan --}}
+                                <td>{{ $m->keterangan ?? '-' }}</td>
+                                
+                                {{-- PERUBAHAN 3: Ambil kode kelompok dari relasi --}}
+                                <td>{{ $m->kelompok->kode_kelompok ?? '-' }}</td>
 
                                 {{-- STATUS HARI INI (BUTTONS) --}}
                                 <td>
-                                    <div class="btn-group btn-group-sm attendance-btns" data-id="{{ $m->id }}">
+                                    {{-- PERUBAHAN 4: id -> id_muhafidzoh --}}
+                                    <div class="btn-group btn-group-sm attendance-btns" data-id="{{ $m->id_muhafidzoh }}">
                                         <button type="button" class="btn btn-outline-success" data-status="hadir">H</button>
                                         <button type="button" class="btn btn-outline-warning" data-status="izin">I</button>
                                         <button type="button" class="btn btn-outline-danger" data-status="alpha">A</button>
@@ -366,18 +375,21 @@
     }
 
     // --- LOGIKA SIMPAN SATUAN ---
+    // --- LOGIKA SIMPAN SATUAN ---
     function submitAbsensi(button, status) {
         const group = button.closest('.attendance-btns');
         const row   = group.closest('tr');
         const id    = group.dataset.id; 
         const tgl   = document.getElementById('tanggal-absensi').value;
+        
+        // ✅ PERBAIKAN: Ambil nilai pertemuan dari dropdown
+        const pertemuan = document.getElementById('pertemuan-select').value; 
 
-        // Ganti Alert Validasi
         if(!tgl) { 
             Swal.fire({
                 icon: 'warning',
                 title: 'Tanggal Kosong',
-                text: 'Harap isi tanggal terlebih dahulu sebelum mengisi absen.',
+                text: 'Harap isi tanggal terlebih dahulu.',
                 confirmButtonColor: '#f6c23e'
             });
             return; 
@@ -386,7 +398,13 @@
         fetch(URL_SIMPAN, {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": CSRF_TOKEN },
-            body: JSON.stringify({ muhafidzoh_id: id, tanggal: tgl, status: status })
+            // ✅ PERBAIKAN: Kirim parameter 'pertemuan'
+            body: JSON.stringify({ 
+                muhafidzoh_id: id, 
+                tanggal: tgl, 
+                status: status,
+                pertemuan: pertemuan 
+            })
         })
         .then(res => res.json())
         .then(data => {
@@ -397,11 +415,17 @@
             // Update UI
             setActiveStatus(group, status);
             row.querySelector('.tanggal-col').textContent = tgl;
+            
+            // Update kolom pertemuan yang sesuai
+            const cells = row.querySelectorAll('.pertemuan-col');
+            const pIndex = parseInt(pertemuan) - 1;
+            if(cells[pIndex]) {
+                updateMeetingBadge(cells[pIndex], status);
+            }
+
             const totalEl = row.querySelector('.total-hadir');
             if(totalEl) totalEl.textContent = data.total_hadir;
-            
-            // Opsional: Toast Sukses Kecil (Bisa dihilangkan jika terlalu berisik)
-            // Toast.fire({ icon: 'success', title: 'Disimpan' });
+            if(totalEl) totalEl.className = 'badge ' + (data.total_hadir > 0 ? 'badge-success' : 'badge-secondary') + ' total-hadir';
         })
         .catch(err => console.error(err));
     }

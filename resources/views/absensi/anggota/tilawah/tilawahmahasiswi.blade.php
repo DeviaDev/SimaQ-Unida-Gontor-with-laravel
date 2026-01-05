@@ -49,9 +49,18 @@
                 <h6 class="text-muted mt-4 mb-2"><i class="fas fa-users mr-1"></i> Filter Kelompok</h6>
                 <div class="d-flex flex-wrap" style="gap: .5rem;">
                     @foreach ($kelompokList as $k)
-                        <a href="?prodi={{ trim(request('prodi')) }}&semester={{ trim(request('semester')) }}&kelompok={{ trim($k) }}"
-                           class="btn btn-sm btn-outline-warning {{ request('kelompok') == $k ? 'active' : '' }}">
-                            Kelompok {{ $k }}
+                        {{-- 
+                             HREF: Tetap kirim ID ke URL (?kelompok=1) agar query database cepat.
+                             LABEL: Tampilkan Nama Kelompok (misal: Istanbul, Mekkah).
+                             
+                             Note: Sesuaikan '$k->nama_kelompok' dengan nama kolom di tabel KelompokLT kamu.
+                             Kalau di tabel namanya 'kode_kelompok', ganti jadi $k->kode_kelompok 
+                        --}}
+                        <a href="?prodi={{ trim(request('prodi')) }}&semester={{ trim(request('semester')) }}&kelompok={{ $k->id_kelompok }}"
+                           class="btn btn-sm btn-outline-warning {{ request('kelompok') == $k->id_kelompok ? 'active' : '' }}">
+                            
+                            {{-- PERBAIKAN: Tambahkan string "Kelompok " di depan --}}
+                            Kelompok {{ $k->nama_kelompok ?? $k->kode_kelompok ?? $k->id_kelompok }}
                         </a>
                     @endforeach
                 </div>
@@ -63,40 +72,34 @@
     @if($isComplete)
     <div class="card shadow">
         <div class="card-body">
-            @if($isComplete)
-                <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
+                {{-- KIRI: Judul + filter aktif --}}
+                <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
+                    <h5 class="mb-0 mr-2">Absensi Tilawah</h5>
 
-                    {{-- KIRI: Judul + filter aktif --}}
-                    <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
-                        <h5 class="mb-0 mr-2">Absensi Tilawah</h5>
-
-                        @if(request('prodi'))
-                            <a href="?semester={{ request('semester') }}"
-                            class="btn btn-sm btn-primary">
-                                {{ request('prodi') }} <span class="ml-1">&times;</span>
-                            </a>
-                        @endif
-
-                        @if(request('semester'))
-                            <a href="?prodi={{ request('prodi') }}"
-                            class="btn btn-sm btn-success">
-                                Semester {{ request('semester') }} <span class="ml-1">&times;</span>
-                            </a>
-                        @endif
-
-                        @if(request('kelompok'))
-                            <a href="?prodi={{ request('prodi') }}&semester={{ request('semester') }}"
-                            class="btn btn-sm btn-warning">
-                                Kelompok {{ request('kelompok') }} <span class="ml-1">&times;</span>
-                            </a>
-                        @endif
-                        <a href="{{ url()->current() }}"
-                        class="btn btn-sm btn-outline-danger">
-                            Clear
+                    @if(request('prodi'))
+                        <a href="?semester={{ request('semester') }}" class="btn btn-sm btn-primary">
+                            {{ request('prodi') }} <span class="ml-1">&times;</span>
                         </a>
-                    </div>
+                    @endif
+
+                    @if(request('semester'))
+                        <a href="?prodi={{ request('prodi') }}" class="btn btn-sm btn-success">
+                            Semester {{ request('semester') }} <span class="ml-1">&times;</span>
+                        </a>
+                    @endif
+
+                    @if(request('kelompok'))
+                        <a href="?prodi={{ request('prodi') }}&semester={{ request('semester') }}" class="btn btn-sm btn-warning">
+                            Kelompok {{ request('kelompok') }} <span class="ml-1">&times;</span>
+                        </a>
+                    @endif
+                    <a href="{{ url()->current() }}" class="btn btn-sm btn-outline-danger">
+                        Clear
+                    </a>
                 </div>
-            @endif
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-bordered table-hover text-center align-middle">
                     <thead class="thead-light">
@@ -118,33 +121,37 @@
                         <tr>
                             <td class="text-center">{{ $loop->iteration }}</td>
                             <td class="text-left">
-                                {{ $m->nama }}
+                                {{-- PERBAIKAN: Gunakan nama_mahasiswi --}}
+                                {{ $m->nama_mahasiswi }}
                             </td>
                             
                             {{-- Input Khatam --}}
                             <td>
+                                {{-- PERBAIKAN: data-id menggunakan id_mahasiswi --}}
                                 <input type="number" class="form-control form-control-sm input-khatam" 
-                                       data-id="{{ $m->id }}" value="{{ $m->khatam_ke }}" min="1" style="width: 60px;">
+                                       data-id="{{ $m->id_mahasiswi }}" value="{{ $m->khatam_ke }}" min="1" style="width: 60px;">
                             </td>
 
                             {{-- CHECKBOX Juz 1-30 --}}
                             @for ($j = 1; $j <= 30; $j++)
                                 <td class="text-center p-0 align-middle">
                                     <div style="height: 100%; display: flex; align-items: center; justify-content: center;">
+                                        {{-- PERBAIKAN: name dan data-id menggunakan id_mahasiswi --}}
                                         <input type="checkbox" 
-                                            name="juz_{{ $m->id }}" 
-                                            class="update-juz"
-                                            data-id="{{ $m->id }}" 
-                                            value="{{ $j }}"
-                                            style="cursor:pointer; transform: scale(1.2);"
-                                            {{ in_array($j, $m->juz_sekarang_array) ? 'checked' : '' }}>
+                                               name="juz_{{ $m->id_mahasiswi }}" 
+                                               class="update-juz"
+                                               data-id="{{ $m->id_mahasiswi }}" 
+                                               value="{{ $j }}"
+                                               style="cursor:pointer; transform: scale(1.2);"
+                                               {{ in_array($j, $m->juz_sekarang_array) ? 'checked' : '' }}>
                                     </div>
                                 </td>
                             @endfor
 
                             {{-- Total Juz --}}
                             <td class="text-center font-weight-bold">
-                                <span id="total-juz-{{ $m->id }}">{{ $m->total_juz }}</span>
+                                {{-- PERBAIKAN: id element menggunakan id_mahasiswi --}}
+                                <span id="total-juz-{{ $m->id_mahasiswi }}">{{ $m->total_juz }}</span>
                             </td>
                         </tr>
                         @empty
@@ -157,8 +164,6 @@
             </div>
         </div>
         
-        {{-- Tombol Simpan (DIPINDAHKAN KE KANAN) --}}
-        {{-- Menggunakan justify-content-end --}}
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-end">
             <div>
                 <button id="btn-simpan-all" class="btn btn-sm btn-primary shadow-sm">
@@ -169,7 +174,7 @@
     </div>
 
     @else
-        {{-- ALERT DINAMIS (Tetap dimunculkan saat filter belum lengkap) --}}
+        {{-- ALERT DINAMIS --}}
         <div class="alert alert-warning d-flex align-items-center">
             <i class="fas fa-info-circle mr-2"></i>
             <span>
@@ -188,93 +193,79 @@
         </div>
     @endif
 
-        {{-- ========================================== --}}
-        {{-- MODIFIKASI: Wrapper IF untuk menyembunyikan Leaderboard jika ada filter --}}
-        {{-- Leaderboard HANYA muncul jika TIDAK ADA prodi, semester, maupun kelompok yg dipilih --}}
-        {{-- ========================================== --}}
-        
-        @if(!$hasProdi && !$hasSemester && !$hasKelompok)
-        
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-list-ol mr-1"></i> Data Seluruh Mahasiswi (Urut Total Juz Tertinggi)
-                        </h6>
-                        {{-- KANAN: Tombol Export & Info --}}
-                        <div class="d-flex align-items-center">
-                            {{-- Tombol Trigger Modal --}}
-                            <small class="text-muted font-italic mr-3">
-                                *Pilih filter di atas untuk input data (Edit).
-                            </small>
-                            <button type="button" class="btn btn-sm btn-success mr-3 shadow-sm" data-toggle="modal" data-target="#modalExport">
-                                <i class="fas fa-file-word mr-1"></i> Export Docx
-                            </button>
-                        </div>
+    {{-- LEADERBOARD --}}
+    @if(!$hasProdi && !$hasSemester && !$hasKelompok)
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list-ol mr-1"></i> Data Seluruh Mahasiswi (Urut Total Juz Tertinggi)
+                    </h6>
+                    <div class="d-flex align-items-center">
+                        <small class="text-muted font-italic mr-3">
+                            *Pilih filter di atas untuk input data (Edit).
+                        </small>
+                        <button type="button" class="btn btn-sm btn-success mr-3 shadow-sm" data-toggle="modal" data-target="#modalExport">
+                            <i class="fas fa-file-word mr-1"></i> Export Docx
+                        </button>
                     </div>
                 </div>
-                <div class="card-body">
-                    @if(isset($leaderboard) && count($leaderboard) > 0)
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover text-center align-middle">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th style="width: 5%">No</th>
-                                        <th class="text-center">Nama Mahasiswi</th>
-                                        <th style="width: 15%">Prodi</th>
-                                        <th style="width: 10%">Semester</th>
-                                        <th style="width: 10%">Kelompok</th>
-                                        <th style="width: 15%" class="bg-primary text-white">Total Juz</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($leaderboard as $idx => $row)
-                                    <tr>
-                                        {{-- Penomoran Pagination --}}
-                                        <td>{{ $leaderboard->firstItem() + $idx }}</td>
-                                        
-                                        <td class="text-left text-dark">
-                                            {{ $row->nama }}
-                                        </td>
-                                        <td>
-                                            {{ $row->prodi }}
-                                        </td>
-                                        <td>{{ $row->semester }}</td>
-                                        <td>{{ $row->kelompok }}</td>
-                                        
-                                        <td class="font-weight-bold text-primary" style="font-size: 1.1em;">
-                                            {{ $row->total_juz }} 
-                                            <small class="text-muted" style="font-size: 0.7em;">Juz</small>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- Tombol Navigasi Halaman (Pagination) --}}
-                        <div class="d-flex justify-content-center mt-4">
-                            {{-- Pakai parameter 'pagination::bootstrap-4' atau 'pagination::bootstrap-5' --}}
-                            {{ $leaderboard->links('pagination::bootstrap-4') }}
-                        </div>
-
-                    @else
-                        {{-- Tampilan Kosong --}}
-                        <div class="text-center py-5">
-                            <div class="mb-3">
-                                <i class="fas fa-database fa-3x text-gray-300"></i>
-                            </div>
-                            <h5 class="text-gray-500">Belum ada data tilawah.</h5>
-                            <p class="text-muted small">Silakan filter dan input data terlebih dahulu.</p>
-                        </div>
-                    @endif
-                </div>
             </div>
-        @endif 
+            <div class="card-body">
+                @if(isset($leaderboard) && count($leaderboard) > 0)
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center align-middle">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th style="width: 5%">No</th>
+                                    <th class="text-center">Nama Mahasiswi</th>
+                                    <th style="width: 15%">Prodi</th>
+                                    <th style="width: 10%">Semester</th>
+                                    <th style="width: 10%">Kelompok</th>
+                                    <th style="width: 15%" class="bg-primary text-white">Total Juz</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($leaderboard as $idx => $row)
+                                <tr>
+                                    <td>{{ $idx + 1 }}</td>
+                                    
+                                    <td class="text-left text-dark">
+                                        {{-- PERBAIKAN: Gunakan nama_mahasiswi atau nama jika dimap di controller --}}
+                                        {{ $row->nama_mahasiswi ?? $row->nama }}
+                                    </td>
+                                    <td>{{ $row->prodi }}</td>
+                                    <td>{{ $row->semester }}</td>
+                                    <td>{{ $row->nama_kelompok_display }}</td>
+                                    <td class="font-weight-bold text-primary" style="font-size: 1.1em;">
+                                        {{ $row->total_juz }} 
+                                        <small class="text-muted" style="font-size: 0.7em;">Juz</small>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-center mt-4">
+                        {{ $leaderboard->links('pagination::bootstrap-4') }}
+                    </div>
+
+                @else
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-database fa-3x text-gray-300"></i>
+                        </div>
+                        <h5 class="text-gray-500">Belum ada data tilawah.</h5>
+                        <p class="text-muted small">Silakan filter dan input data terlebih dahulu.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif 
 </div>
-{{-- ========================================== --}}
+
 {{-- MODAL EXPORT --}}
-{{-- ========================================== --}}
 <div class="modal fade" id="modalExport" tabindex="-1" role="dialog" aria-labelledby="modalExportLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -291,14 +282,12 @@
                         Data akan diurutkan berdasarkan Total Juz tertinggi.
                     </div>
 
-                    {{-- Input Limit --}}
                     <div class="form-group">
                         <label for="limit">Jumlah Mahasiswi (Top Rank)</label>
                         <input type="number" class="form-control" name="limit" id="limit" value="10" min="1" required>
                         <small class="text-muted">Masukkan jumlah data yang ingin ditampilkan (misal: 10 besar, 50 besar).</small>
                     </div>
 
-                    {{-- Input Bulan --}}
                     <div class="form-group">
                         <label for="bulan">Keterangan Bulan</label>
                         <select class="form-control" name="bulan" id="bulan" required>
@@ -439,10 +428,10 @@
             
             $('tbody tr').each(function() {
                 var row = $(this);
+                // Javascript akan mengambil ID dari data-id yang sudah kita perbaiki
                 var id = row.find('.input-khatam').data('id');
                 var khatam = row.find('.input-khatam').val();
                 
-                // Ambil VALUE spesifik checkbox yang dicentang (misal: [3, 7, 10])
                 var checkedValues = [];
                 row.find('.update-juz:checked').each(function() {
                     checkedValues.push($(this).val());
@@ -450,9 +439,10 @@
 
                 if(id) {
                     dataToSave.push({
-                        mahasiswi_id: id,
+                        // Nama key 'mahasiswi_id' tetap, karena controller mengharapkannya
+                        mahasiswi_id: id, 
                         khatam_ke: khatam,
-                        juz: checkedValues // Kirim Array ke Controller
+                        juz: checkedValues 
                     });
                 }
             });

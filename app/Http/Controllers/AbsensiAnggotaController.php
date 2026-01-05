@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Mahasiswi2;
-use App\Models\Muhafidzoh;
+use App\Models\Mahasiswi;   // ✅ Pakai Model Baru
+use App\Models\Muhafidzoh;  // ✅ Pakai Model Baru
+use App\Models\KelompokLT;  // ✅ Tambah Model Kelompok
+use App\Models\Tempat;      // ✅ Tambah Model Tempat (untuk Gedung)
 use App\Models\Mahatilawah;
 
 class AbsensiAnggotaController extends Controller
@@ -20,36 +22,42 @@ class AbsensiAnggotaController extends Controller
 
     public function absensiTahfidzMahasiswi(Request $request)
     {
-        $query = Mahasiswi2::query();
+        // 1. Gunakan Model Mahasiswi yang baru
+        $query = Mahasiswi::query();
 
-        if (request('prodi')) {
-            $query->where('prodi', request('prodi'));
+        if ($request->filled('prodi')) {
+            $query->where('prodi', $request->prodi);
         }
 
-        if (request('semester')) {
-            $query->where('semester', request('semester'));
+        if ($request->filled('semester')) {
+            $query->where('semester', $request->semester);
         }
 
-        if (request('kelompok')) {
-            $query->where('kelompok', request('kelompok'));
+        if ($request->filled('kelompok')) {
+            // ✅ Filter berdasarkan id_kelompok (bukan string 'kelompok')
+            $query->where('id_kelompok', $request->kelompok);
         }
 
-        $mahasiswi2 = $query->get();
+        // Ambil data beserta relasi kelompok agar namanya muncul
+        $mahasiswi = $query->with('kelompok')->orderBy('nama_mahasiswi')->get();
 
+        // 2. Perbaiki Logika List Kelompok (Agar return Object, bukan String)
         $kelompokList = [];
 
-        if (request('prodi') && request('semester')) {
-            $kelompokList = Mahasiswi2::where('prodi', request('prodi'))
-                ->where('semester', request('semester'))
-                ->select('kelompok')
-                ->distinct()
-                ->orderBy('kelompok')
-                ->pluck('kelompok');
+        if ($request->filled('prodi') && $request->filled('semester')) {
+            // Ambil data dari tabel kelompok_lt yang memiliki mahasiswa di prodi/smt tersebut
+            $kelompokList = KelompokLT::whereHas('mahasiswi', function($q) use ($request) {
+                $q->where('prodi', $request->prodi)
+                  ->where('semester', $request->semester);
+            })
+            ->orderBy('kode_kelompok')
+            ->get(); 
+            // 👆 Pakai get() agar hasilnya Object, jadi di Blade bisa panggil $k->id_kelompok
         }
 
         return view('absensi.anggota.tahfidz.tahfidzmahasiswi', [
             'title' => 'Absensi Tahfidz Mahasiswi',
-            'mahasiswi' => $mahasiswi2,
+            'mahasiswi' => $mahasiswi,
             'menuAbsensiAnggota' => 'active',
             'menuAbsensiTahfidz' => 'active',
             'tahfidzmahasiswi' => 'active',
@@ -59,21 +67,25 @@ class AbsensiAnggotaController extends Controller
 
     public function absensiTahfidzMuhafidzoh(Request $request)
     {
-        $query = Muhafidzoh::query();
+        // Gunakan Model Muhafidzoh dengan relasi Tempat & Kelompok
+        $query = Muhafidzoh::with(['tempat', 'kelompok']);
 
-        // 🔎 Filter GEDUNG
+        // 🔎 Filter GEDUNG (Via Relasi Tempat)
         if ($request->filled('gedung')) {
-            $query->where('gedung', $request->gedung);
+            // Karena 'gedung' ada di tabel 'tempat' (kolom nama_tempat)
+            $query->whereHas('tempat', function($q) use ($request) {
+                $q->where('nama_tempat', $request->gedung);
+            });
         }
 
-        // Data utama
-        $muhafidzoh = $query->orderBy('nama')->get();
+        // Data utama (Order by nama_muhafidzoh)
+        $muhafidzoh = $query->orderBy('nama_muhafidzoh')->get();
 
-        // Dropdown daftar gedung
-        $gedungList = Muhafidzoh::select('gedung')
+        // Dropdown daftar gedung (Ambil dari tabel Tempat)
+        $gedungList = Tempat::select('nama_tempat')
             ->distinct()
-            ->orderBy('gedung')
-            ->pluck('gedung');
+            ->orderBy('nama_tempat')
+            ->pluck('nama_tempat');
 
         return view('absensi.anggota.tahfidz.tahfidzmuhafidzoh', [
             'title' => 'Absensi Tahfidz Muhafidzoh',
