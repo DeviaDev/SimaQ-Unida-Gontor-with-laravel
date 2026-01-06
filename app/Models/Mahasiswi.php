@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Absensis;
 
 class Mahasiswi extends Model
 {
@@ -38,6 +39,18 @@ class Mahasiswi extends Model
     public function tempat()
     {
         return $this->belongsTo(Tempat::class, 'id_tempat', 'id_tempat');
+    }
+
+    // Di dalam class Mahasiswi extends Model ...
+
+    // ... (Relasi dosen, muhafidzoh, dll biarkan ada) ...
+
+    // TAMBAHKAN INI:
+    public function absensi()
+    {
+        // Pastikan kamu punya tabel 'absensis' di database baru
+        // dan foreign key-nya adalah 'id_mahasiswi'
+        return $this->hasMany(Absensis::class, 'id_mahasiswi', 'id_mahasiswi');
     }
 }
 

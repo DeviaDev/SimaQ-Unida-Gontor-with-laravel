@@ -9,6 +9,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DokumentasiController;
 use App\Http\Controllers\AbsensiAnggotaController;
 use App\Http\Controllers\AbsensiPengurusController;
+use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\AbsensiMuhafidzohController;
+use App\Http\Controllers\TilawahMahasiswiController;
+use App\Http\Controllers\LaporanKegiatanController;
+use App\Http\Controllers\TilawahPengurusController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,7 +33,6 @@ route::middleware('checkLogin')->group(function(){
 //dashboard
 Route::get('dashboard', [DashboardController::class,'index'])->name('dashboard');
 
-
 //user
 Route::get('user', [UserController::class,'index'])->name('user');
 Route::get('user/create', [UserController::class,'create'])->name('userCreate');
@@ -39,9 +43,6 @@ Route::post('user/store', [UserController::class,'store'])->name('userStore');
 Route::post('/user/import', [UserController::class, 'importExcel'])->name('userImport');
 Route::get('/user/excel', [UserController::class, 'excel'])->name('userExport');
 Route::get('/admin/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
-
-
-
 
 //DATA
 Route::get('index', [DataController::class,'index'])->name('index');
@@ -103,43 +104,86 @@ Route::prefix('pengurus')->group(function () {
     Route::get('/pdf', [DataController::class, 'pdf1'])->name('pengurusPdf');
 });
 
-
-
-
-
-
 //absensi Anggota
 
-Route::get('absensi/anggota/tahfidz/mahasiswi', [AbsensiAnggotaController::class,'absensiTahfidzMahasiswi'])->name('absensiTahfidzMahasiswi');
+Route::get('/absensi/anggota/tahfidz/mahasiswi',[AbsensiAnggotaController::class, 'absensiTahfidzMahasiswi'])->name('absensiTahfidzMahasiswi');
 
 Route::get('absensi/anggota/tahfidz/muhafidzoh', [AbsensiAnggotaController::class,'absensiTahfidzMuhafidzoh'])->name('absensiTahfidzMuhafidzoh');
 
+//ABSENSIII
+// Route untuk menampilkan halaman (GET)
+Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
+Route::post('/absensi/simpan', [AbsensiController::class, 'simpan'])
+    ->name('absensi.simpan');
+
+Route::post('/absensi/push-pertemuan', [AbsensiController::class, 'pushPertemuan'])
+    ->name('absensi.push');
+
+Route::post('/absensi/refresh', [AbsensiController::class, 'refresh'])
+    ->name('absensi.refresh');
+
+Route::post('/absensi/export', [AbsensiController::class, 'export'])
+    ->name('absensi.export');
+
+Route::prefix('absensi-muhafidzoh')->name('absensi_muhafidzoh.')->group(function () {
+    Route::get('/', [AbsensiMuhafidzohController::class, 'index'])->name('index');
+    Route::post('/simpan', [AbsensiMuhafidzohController::class, 'simpan'])->name('simpan');
+    Route::post('/push', [AbsensiMuhafidzohController::class, 'pushPertemuan'])->name('push');
+    Route::post('/refresh', [AbsensiMuhafidzohController::class, 'refresh'])->name('refresh');
+    Route::post('/export', [AbsensiMuhafidzohController::class, 'export'])->name('export');
+});
 
 //tahsin
-Route::get('absensi/anggota/tilawah/mahasiswi', [AbsensiAnggotaController::class,'absensiTilawahMahasiswi'])->name('absensiTilawahMahasiswi');
+Route::get('/tilawah-mahasiswi', [TilawahMahasiswiController::class, 'index'])
+    ->name('absensiTilawahMahasiswi');
+Route::post('/tilawah-mahasiswi/simpan', [TilawahMahasiswiController::class, 'simpan'])->name('tilawah.simpan');
+// Tambahkan di bawah route simpan yang lama
+Route::post('/tilawah-mahasiswi/simpan-semua', [TilawahMahasiswiController::class, 'simpanSemua'])
+    ->name('tilawah.simpanSemua');
+Route::post('/tilawah-mahasiswi/export', [TilawahMahasiswiController::class, 'exportDocx'])
+    ->name('tilawah.export');
 
+
+// lain2
 Route::get('absensi/anggota/tilawah/muhafidzoh', [AbsensiAnggotaController::class,'absensiTilawahMuhafidzoh'])->name('absensiTilawahMuhafidzoh');
 
 Route::get('absensi/anggota/tilawah/staf', [AbsensiAnggotaController::class,'absensiTilawahStaf'])->name('absensiTilawahStaf');
 
 Route::get('absensi/anggota/tilawah/dosen', [AbsensiAnggotaController::class,'absensiTilawahDosen'])->name('absensiTilawahDosen');
 
-
-
 //absensi Pengurus
+Route::prefix('laporan-kegiatan')->group(function () {
+    Route::get('/', [LaporanKegiatanController::class, 'index'])->name('laporan.index');
+    Route::post('/store', [LaporanKegiatanController::class, 'store'])->name('laporan.store'); // Simpan Kegiatan Baru
+    Route::get('/{id}', [LaporanKegiatanController::class, 'show'])->name('laporan.show'); // Halaman Detail & Absen
+    Route::post('/update-absensi/{id}', [LaporanKegiatanController::class, 'updateAbsensi'])->name('laporan.update_absensi'); // Simpan Absen
+    Route::get('/export/{id}', [LaporanKegiatanController::class, 'export'])->name('laporan.export');
+});
 
-
-Route::get('/pengurus/lailatu', [AbsensiPengurusController::class,'pengurusLailatu'])->name('pengurusLailatu');
-
-Route::get('/pengurus/tilawah', [AbsensiPengurusController::class,'pengurusTilawah'])->name('pengurusTilawah');
+Route::get('/pengurus/tilawah', [TilawahPengurusController::class, 'index'])->name('pengurusTilawah');
+Route::post('/pengurus/tilawah/simpan', [TilawahPengurusController::class, 'simpanSemua'])->name('pengurus.tilawah.simpan');
+Route::post('/pengurus/tilawah/export', [TilawahPengurusController::class, 'exportDocx'])->name('pengurus.tilawah.export');
 
 Route::get('/pengurus/taujihat', [AbsensiPengurusController::class,'pengurusTaujihat'])->name('pengurusTaujihat');
 
 
 //Ujian
+
 Route::get('index', [UjianController::class,'index'])->name('index');
 
+//mandiri
 Route::get('/tahfidz/mandiri', [UjianController::class,'mandiri'])->name('mandiri');
+Route::prefix('mandiri')->group(function () {
+    Route::get('/', [DataController::class, 'mandiri'])->name('mandiri');
+    Route::get('/create', [DataController::class, 'create3'])->name('mandiriCreate');
+    Route::get('/edit/{id_mahasiswi}', [DataController::class, 'edit3'])->name('mandiriEdit');
+    Route::post('/update/{id_mahasiswi}', [DataController::class, 'update3'])->name('mandiriUpdate');
+    Route::delete('/destroy/{id_mahasiswi}', [DataController::class, 'destroy3'])->name('mandiriDestroy');
+    Route::post('/store', [DataController::class, 'store3'])->name('mandiriStore');
+    Route::post('/import', [DataController::class, 'importExcel3'])->name('mandiriImport');
+    Route::get('/excel', [DataController::class, 'excel3'])->name('mandiriExport');
+    Route::get('/pdf', [DataController::class, 'pdf3'])->name('mandiriPdf');
+});
 
 Route::get('/tahfidz/serentak', [UjianController::class,'serentak'])->name('serentak');
 
