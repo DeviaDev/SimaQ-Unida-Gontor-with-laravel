@@ -34,7 +34,6 @@
                 <thead class="bg-primary text-white">
                     <tr class="text-center">
                         <th>No</th>
-                        <th>NIM</th>
                         <th>Nama Mahasiswi</th>
                         <th>Prodi</th>
                         <th>Semester</th>
@@ -45,12 +44,10 @@
                     </tr>
                 </thead>
 
-                
                     <tbody>
                         @foreach ($mandiri as $item)
                         <tr>
                             <td class="text-center">{{ $loop->iteration }}</td>
-                            <td>{{ $item->mahasiswi->nim ?? '-' }}</td>
                             <td>{{ $item->mahasiswi->nama_mahasiswi ?? '-' }}</td>
                             <td>{{ $item->mahasiswi->prodi ?? '-' }}</td>
                             <td>{{ $item->mahasiswi->semester ?? '-' }}</td>

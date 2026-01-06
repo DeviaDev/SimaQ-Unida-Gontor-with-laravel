@@ -141,7 +141,6 @@
           <div id="collapseUjianTahfidz" class="collapse" aria-labelledby="headingUjianTahfidz" data-parent="#collapseUjian">
               <div class="bg-white py-2 collapse-inner rounded">
                   <a class="collapse-item {{ $mandiri ?? '' }}" href="{{ route('mandiri') }}">Ujian Mandiri</a>
-                  <a class="collapse-item {{ $serentak ?? '' }}" href="{{ route('serentak') }}">Ujian Serentak</a>
                   <a class="collapse-item {{ $remedial ?? '' }}" href="{{ route('remedial') }}">Remedial</a>
               </div>
           </div>
