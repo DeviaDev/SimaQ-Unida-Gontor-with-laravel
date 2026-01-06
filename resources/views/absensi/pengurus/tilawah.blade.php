@@ -37,7 +37,7 @@
                         @forelse($pengurus as $index => $p)
                         <tr>
                             <td class="text-center">{{ $loop->iteration }}</td>
-                            <td class="text-left font-weight-bold text-dark">
+                            <td class="text-left text-dark">
                                 {{ $p->nama }}
                             </td>
                             
@@ -116,7 +116,7 @@
                                 {{-- Nomor Urut Paginasi --}}
                                 <td>{{ $idx + 1 + ($leaderboard->currentPage() - 1) * $leaderboard->perPage() }}</td>
                                 
-                                <td class="text-left text-dark font-weight-bold">
+                                <td class="text-left text-dark">
                                     {{ $row->nama }}
                                 </td>
                                 

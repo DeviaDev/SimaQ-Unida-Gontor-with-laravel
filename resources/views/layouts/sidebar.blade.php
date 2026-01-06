@@ -146,25 +146,6 @@
 </li>
 
 
-
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                ARSIP
-            </div>
-
-            <!-- Nav Item - Charts -->
-            <li class="nav-item {{ $menuDokumentasi ?? ''}}">
-                <a class="nav-link" href="{{ route('dokumentasi') }}">
-                    <i class="fas fa-fw fa-link"></i>
-                    <span>Documentation</span></a>
-            </li>
-
-            
-        
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
 
