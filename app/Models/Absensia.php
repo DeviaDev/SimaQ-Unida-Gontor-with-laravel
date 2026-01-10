@@ -21,6 +21,7 @@ class Absensia extends Model
         'pertemuan',
         'tanggal',
         'status',
+        'gedung',
     ];
 
     public $timestamps = true; // Ubah ke true jika tabel absensia punya created_at/updated_at

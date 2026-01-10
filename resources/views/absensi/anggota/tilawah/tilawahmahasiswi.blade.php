@@ -149,7 +149,7 @@
                             @endfor
 
                             {{-- Total Juz --}}
-                            <td class="text-center font-weight-bold">
+                            <td class="text-center ">
                                 {{-- PERBAIKAN: id element menggunakan id_mahasiswi --}}
                                 <span id="total-juz-{{ $m->id_mahasiswi }}">{{ $m->total_juz }}</span>
                             </td>
@@ -237,9 +237,18 @@
                                     <td>{{ $row->prodi }}</td>
                                     <td>{{ $row->semester }}</td>
                                     <td>{{ $row->nama_kelompok_display }}</td>
-                                    <td class="font-weight-bold text-primary" style="font-size: 1.1em;">
-                                        {{ $row->total_juz }} 
-                                        <small class="text-muted" style="font-size: 0.7em;">Juz</small>
+                                    <td class="font-weught-bold text-primary" style="font-size: 1em;"> @php
+                                            $jmlKhatam = floor($row->total_juz / 30);
+                                            $sisaJuz   = $row->total_juz % 30;
+                                        @endphp
+
+                                        {{-- Tampilkan Khatam jika lebih dari 0 --}}
+                                        @if($jmlKhatam > 0)
+                                            {{ $jmlKhatam }} <small class="text-muted">Khatam</small>
+                                        @endif
+                                        
+                                        {{-- Tampilkan Juz --}}
+                                        {{ $sisaJuz }} <small class="text-muted">Juz</small>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -389,7 +398,25 @@
 
             // Rumus Total: ((Khatam - 1) * 30) + Jumlah Centang Saat Ini
             var totalJuz = ((khatam - 1) * 30) + juzCount;
-            $("#total-juz-" + id).text(totalJuz); 
+
+            // --- LOGIKA FORMAT: X Khatam Y Juz ---
+            // Hitung berapa kali khatam (pembulatan ke bawah)
+            var displayKhatam = Math.floor(totalJuz / 30); 
+            // Hitung sisa juz
+            var displayJuz = totalJuz % 30;
+
+            var formattedText = "";
+
+            if (displayKhatam > 0) {
+                formattedText += displayKhatam + " Khatam ";
+            }
+
+            // Tampilkan sisa juz (kecuali jika pas 0 tapi ada khatam, opsional mau ditampilkan atau tidak)
+            // Disini saya buat selalu tampil misal: "1 Khatam 0 Juz" agar konsisten
+            formattedText += displayJuz + " Juz";
+
+            // Update teks di tabel
+            $("#total-juz-" + id).text(formattedText); 
 
             // Warnai checkbox yang dicentang
             row.find('.update-juz').each(function() {

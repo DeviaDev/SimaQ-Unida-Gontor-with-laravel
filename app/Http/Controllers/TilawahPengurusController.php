@@ -122,9 +122,20 @@ class TilawahPengurusController extends Controller
                 $i = $index + 1;
                 $templateProcessor->setValue('no#' . $i, $i);
                 $templateProcessor->setValue('nama#' . $i, $item->nama);
-                $templateProcessor->setValue('prodi#' . $i, '-');
+                $templateProcessor->setValue('prodi#' . $i, '-'); // Pengurus biasanya tidak ada prodi di laporan ini
                 $templateProcessor->setValue('smt#' . $i, '-');
-                $templateProcessor->setValue('total#' . $i, $item->total_juz . ' Juz');
+
+                // --- LOGIKA BARU FORMAT KHATAM ---
+                $jmlKhatam = floor($item->total_juz / 30);
+                $sisaJuz   = $item->total_juz % 30;
+                
+                $formatText = "";
+                if ($jmlKhatam > 0) {
+                    $formatText .= $jmlKhatam . " Khatam ";
+                }
+                $formatText .= $sisaJuz . " Juz";
+
+                $templateProcessor->setValue('total#' . $i, $formatText);
             }
 
             $fileName = 'Laporan_Tilawah_Pengurus_' . date('Ymd_His') . '.docx';

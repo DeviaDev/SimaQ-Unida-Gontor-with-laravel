@@ -200,7 +200,18 @@ class TilawahMahasiswiController extends Controller
                 $templateProcessor->setValue('nama#' . $i, $item->nama);
                 $templateProcessor->setValue('prodi#' . $i, $item->prodi);
                 $templateProcessor->setValue('smt#' . $i, $item->semester);
-                $templateProcessor->setValue('total#' . $i, $item->total_juz . ' Juz');
+
+                // --- LOGIKA BARU FORMAT KHATAM ---
+                $jmlKhatam = floor($item->total_juz / 30);
+                $sisaJuz   = $item->total_juz % 30;
+                
+                $formatText = "";
+                if ($jmlKhatam > 0) {
+                    $formatText .= $jmlKhatam . " Khatam ";
+                }
+                $formatText .= $sisaJuz . " Juz";
+
+                $templateProcessor->setValue('total#' . $i, $formatText);
             }
 
             $fileName = 'Laporan_Tilawah_' . date('Ymd_His') . '.docx';

@@ -297,7 +297,7 @@
                             class="btn btn-sm btn-success mr-2" 
                             data-toggle="modal" 
                             data-target="#modalExport">
-                        <i class="fas fa-file-pdf mr-1"></i> Export
+                        <i class="fas fa-file-word mr-1"></i></i> Export
                     </button>
                     <button
                         type="button"
