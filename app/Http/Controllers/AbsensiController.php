@@ -122,6 +122,7 @@ class AbsensiController extends Controller
 
         try {
             // 1. Cek data existing pakai Model Absensi
+            $mhs = Mahasiswi::findOrFail($request->mahasiswi_id);
             // Ingat: kolom FK di tabel absensi harusnya 'id_mahasiswi'
             $existing = Absensis::where('id_mahasiswi', $request->mahasiswi_id)
                 ->where('tanggal', $request->tanggal)
@@ -139,6 +140,10 @@ class AbsensiController extends Controller
                     'status'    => $request->status,
                     'pertemuan' => $pertemuanExisting,
                     // updated_at otomatis diurus Eloquent
+                    // --- TAMBAHAN PENTING DI SINI ---
+                    'prodi'     => $mhs->prodi,       // Simpan Prodi
+                    'semester'  => $mhs->semester,    // Simpan Semester
+                    'kelompok'  => $mhs->id_kelompok, // Simpan Kelompok (sesuaikan nama kolom di DB absensis)
                 ]
             );
             
@@ -189,7 +194,8 @@ class AbsensiController extends Controller
         try {
             // 2. Gunakan updateOrCreate agar lebih aman dan rapi
             // Ini otomatis handle INSERT jika belum ada, atau UPDATE jika sudah ada
-            
+            $mhs = Mahasiswi::findOrFail($request->mahasiswi_id);
+
             Absensis::updateOrCreate(
                 [
                     'id_mahasiswi' => $request->mahasiswi_id,
@@ -199,6 +205,10 @@ class AbsensiController extends Controller
                     'pertemuan' => $request->pertemuan,
                     'status'    => $request->status,
                     // created_at & updated_at otomatis diisi oleh Eloquent
+                    // --- TAMBAHAN PENTING DI SINI JUGA ---
+                    'prodi'     => $mhs->prodi,
+                    'semester'  => $mhs->semester,
+                    'kelompok'  => $mhs->id_kelompok,
                 ]
             );
 

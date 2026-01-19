@@ -29,18 +29,18 @@
     <form action="{{ route('laporan.update_absensi', $kegiatan->id) }}" method="POST">
         @csrf
         <div class="card shadow">
-            <div class="card-header py-3 bg-primary text-white d-flex justify-content-between align-items-center">
-                <h6 class="m-0 font-weight-bold text-white"><i class="fas fa-users"></i> Absensi Pengurus</h6>
+            <div class="card-header py-3 bg-light text-primary d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-users"></i> Absensi Pengurus</h6>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover mb-0 align-middle">
-                        <thead class="thead-light">
+                        <thead class="bg-primary text-white text-center">
                             <tr>
-                                <th width="5%">No</th>
-                                <th>Nama Pengurus</th>
-                                <th class="text-center" width="40%">Status Kehadiran</th>
-                                <th>Keterangan (Opsional)</th>
+                                <th width="5%" class="align-middle border-0">No</th>
+                                <th class="align-middle border-0" style="text-align: center; padding-left: 20px;">Nama Pengurus</th>
+                                <th class="align-middle border-0" width="40%">Status Kehadiran</th>
+                                <th class="align-middle border-0">Keterangan (Opsional)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -89,7 +89,7 @@
             <div class="card-footer text-right">
                 {{-- ✅ BUTTON EXPORT (Menggantikan Simpan Atas) --}}
                 <a href="{{ route('laporan.export', $kegiatan->id) }}" class="btn btn-success btn-sm font-weight-bold">
-                    <i class="fas fa-file-excel mr-1"></i> Export Absensi
+                    <i class="fas fa-file-word mr-1"></i> Export Absensi
                 </a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save mr-1"></i> Simpan Perubahan Absensi

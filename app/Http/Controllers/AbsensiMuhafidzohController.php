@@ -126,6 +126,9 @@ class AbsensiMuhafidzohController extends Controller
 
         DB::beginTransaction();
         try {
+            $muhafidzoh = Muhafidzoh::with('tempat')->find($request->muhafidzoh_id);
+            $namaGedung = $muhafidzoh && $muhafidzoh->tempat ? $muhafidzoh->tempat->nama_tempat : null;
+
             // Cek data lama untuk mempertahankan nilai pertemuan jika ada
             $existing = Absensia::where('id_muhafidzoh', $request->muhafidzoh_id)
                 ->where('tanggal', $request->tanggal)
@@ -145,7 +148,8 @@ class AbsensiMuhafidzohController extends Controller
                 ],
                 [
                     'status'    => $request->status,
-                    'pertemuan' => $pertemuanExisting
+                    'pertemuan' => $pertemuanExisting,
+                    'gedung'    => $namaGedung
                 ]
             );
 
@@ -171,6 +175,9 @@ class AbsensiMuhafidzohController extends Controller
     // --- PUSH PERTEMUAN (AJAX) ---
     public function pushPertemuan(Request $request)
     {
+        $muhafidzoh = Muhafidzoh::with('tempat')->find($request->muhafidzoh_id);
+        $namaGedung = $muhafidzoh && $muhafidzoh->tempat ? $muhafidzoh->tempat->nama_tempat : null;
+
         $request->validate([
             'muhafidzoh_id' => 'required',
             'tanggal'       => 'required|date',
@@ -201,7 +208,8 @@ class AbsensiMuhafidzohController extends Controller
                 ],
                 [
                     'pertemuan' => $request->pertemuan,
-                    'status'    => $request->status
+                    'status'    => $request->status,
+                    'gedung'    => $namaGedung
                 ]
             );
 

@@ -16,13 +16,14 @@
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
-                    <thead>
+                    {{-- Tambahkan class bg-primary dan text-white di sini --}}
+                    <thead class="bg-primary text-white">
                         <tr>
-                            <th>No</th>
+                            <th style="width: 5%">No</th>
                             <th>Tanggal</th>
                             <th>Nama Kegiatan</th>
                             <th>Tempat</th>
-                            <th>Aksi</th>
+                            <th style="width: 15%">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

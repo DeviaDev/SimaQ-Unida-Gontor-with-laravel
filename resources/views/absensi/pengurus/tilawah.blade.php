@@ -63,7 +63,7 @@
                             @endfor
 
                             {{-- Total Juz --}}
-                            <td class="text-center font-weight-bold">
+                            <td class="text-center">
                                 <span id="total-juz-{{ $p->id }}">{{ $p->total_juz }}</span>
                             </td>
                         </tr>
@@ -120,9 +120,19 @@
                                     {{ $row->nama }}
                                 </td>
                                 
-                                <td class="font-weight-bold text-primary" style="font-size: 1.1em;">
-                                    {{ $row->total_juz }} 
-                                    <small class="text-muted" style="font-size: 0.7em;">Juz</small>
+                                <td class="font-weight-bold text-primary" style="font-size: 1em;">
+                                    @php
+                                        $jmlKhatam = floor($row->total_juz / 30);
+                                        $sisaJuz   = $row->total_juz % 30;
+                                    @endphp
+
+                                    {{-- Tampilkan Khatam jika lebih dari 0 --}}
+                                    @if($jmlKhatam > 0)
+                                        {{ $jmlKhatam }} <small class="text-muted">Khatam</small>
+                                    @endif
+                                    
+                                    {{-- Tampilkan Juz --}}
+                                    {{ $sisaJuz }} <small class="text-muted">Juz</small>
                                 </td>
                             </tr>
                             @endforeach
@@ -192,11 +202,25 @@
         function updateVisual(row) {
             var id = row.find('.input-khatam').data('id');
             var khatam = parseInt(row.find('.input-khatam').val()) || 1;
+            
+            // Hitung jumlah checkbox
             var juzCount = row.find('.update-juz:checked').length; 
             var totalJuz = ((khatam - 1) * 30) + juzCount;
             
-            $("#total-juz-" + id).text(totalJuz); 
+            // --- LOGIKA FORMAT BARU: X Khatam Y Juz ---
+            var displayKhatam = Math.floor(totalJuz / 30); 
+            var displayJuz = totalJuz % 30;
 
+            var formattedText = "";
+            if (displayKhatam > 0) {
+                formattedText += displayKhatam + " Khatam ";
+            }
+            formattedText += displayJuz + " Juz";
+
+            // Update Text
+            $("#total-juz-" + id).text(formattedText); 
+
+            // Update warna background
             row.find('.update-juz').each(function() {
                 var td = $(this).closest('td');
                 if ($(this).is(':checked')) {
