@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pengurus', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama');
-            $table->string('email')->unique();
-            $table->string('foto')->nullable();
-            $table->timestamps();
+        Schema::table('tilawah_pengurus', function (Blueprint $table) {
+            $table->foreign(['id_pengurus'], 'fk_tilawah_pengurus')->references(['id'])->on('pengurus')->onUpdate('no action')->onDelete('cascade');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengurus');
+        Schema::table('tilawah_pengurus', function (Blueprint $table) {
+            $table->dropForeign('fk_tilawah_pengurus');
+        });
     }
 };

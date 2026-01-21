@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tilawah_pengurus', function (Blueprint $table) {
-            $table->id();
+        Schema::create('pengurus', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('nama');
+            $table->string('email')->unique();
+            $table->string('foto')->nullable();
             $table->timestamps();
         });
     }
@@ -22,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tilawah_pengurus');
+        Schema::dropIfExists('pengurus');
     }
 };
