@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mahatilawah', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('kelompok_lt', function (Blueprint $table) {
+            $table->foreign(['id_tempat'])->references(['id_tempat'])->on('tempat')->onUpdate('no action')->onDelete('set null');
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mahatilawah');
+        Schema::table('kelompok_lt', function (Blueprint $table) {
+            $table->dropForeign('kelompok_lt_id_tempat_foreign');
+        });
     }
 };
