@@ -12,15 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('kelompok_lt', function (Blueprint $table) {
-            $table->id('id_kelompok');
-            $table->string('kode_kelompok',50)->nullable();
-            $table->unsignedBigInteger('id_tempat')->nullable();
+            $table->bigIncrements('id_kelompok');
+            $table->string('kode_kelompok', 50)->nullable();
+            $table->unsignedBigInteger('id_tempat')->nullable()->index('kelompok_lt_id_tempat_foreign');
             $table->timestamps();
-
-            $table->foreign('id_tempat')
-                  ->references('id_tempat')
-                  ->on('tempat')
-                  ->onDelete('set null');
         });
     }
 

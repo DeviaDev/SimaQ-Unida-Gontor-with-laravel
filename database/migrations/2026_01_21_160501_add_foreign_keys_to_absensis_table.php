@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('laporan_kegiatan', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('absensis', function (Blueprint $table) {
+            $table->foreign(['id_mahasiswi'], 'fk_absensis_mahasiswi')->references(['id_mahasiswi'])->on('mahasiswi')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('laporan_kegiatan');
+        Schema::table('absensis', function (Blueprint $table) {
+            $table->dropForeign('fk_absensis_mahasiswi');
+        });
     }
 };
