@@ -221,29 +221,52 @@ public function storeTahsin(Request $request)
             'mahasiswi' => $mahasiswi,
         ];
 
+        
         return view('ujian.tahsin.edittahsin', $data); // Baris 226
     }
 
-    public function updateTahsin(Request $request, $id) 
+    public function updateTahsin(Request $request, $id_tahsin)
 {
-    $tahsin = \App\Models\Ujiantahsin::findOrFail($id);
-    $tahsin->nilai = $request->nilai;
+    // 1. Validasi Input (Mencegah data kosong/invalid masuk DB)
+    $request->validate([
+        'id_mahasiswi' => 'required|exists:mahasiswi,id_mahasiswi', // Pastikan mahasiswi ada
+        'prodi'        => 'nullable|string',
+        'semester'     => 'nullable|numeric',
+        'materi'       => 'required|string',
+        'nilai'        => 'nullable|in:A,A-,B+,B,C+,C,C-', // Batasi nilai sesuai opsi
+    ]);
+
+    // 2. Ambil data lama
+    $tahsin = \App\Models\Ujiantahsin::findOrFail($id_tahsin);
+
+    // 3. Update SEMUA field, bukan hanya nilai
+    $tahsin->id_mahasiswi = $request->id_mahasiswi;
+    $tahsin->prodi        = $request->prodi;
+    $tahsin->semester     = $request->semester;
+    $tahsin->materi       = $request->materi;
+    $tahsin->nilai        = $request->nilai;
+    
     $tahsin->save();
 
-    // Jika setelah diupdate nilainya jadi C/C-, masukkan ke remedial
-    if ($request->nilai == 'C' || $request->nilai == 'C-') {
-        // Cek dulu biar nggak double datanya di tabel remedial
+    if (in_array($request->nilai, ['C', 'C-'])) {
+        
         \App\Models\Remedial::updateOrCreate(
-            ['id_tahsin' => $tahsin->id], // Cari berdasarkan ID ujian
+            // Kunci pencarian (agar tidak duplikat)
+            // PENTING: Gunakan $tahsin->id_tahsin (sesuai struktur tabel Anda), bukan ->id
+            ['id_tahsin' => $tahsin->id_tahsin], 
+            
+            // Data yang akan diupdate atau dibuat baru
             [
                 'id_mahasiswi' => $tahsin->id_mahasiswi,
                 'materi'       => $tahsin->materi,
                 'status'       => 'Wajib Remedial'
             ]
         );
-    }
+    } else {
+        
 
-    return redirect()->route('tahsin')->with('success', 'Data diperbarui!');
+    return redirect()->route('tahsin')->with('success', 'Data berhasil diperbarui!');
+}
 }
 
         public function destroyTahsin($id_tahsin)
@@ -276,17 +299,6 @@ public function storeTahsin(Request $request)
     return $pdf->download('Data-Ujian-Tahsin.pdf');
 }
 
-public function tahsinDestroy($id)
-{
-    // Cari data berdasarkan ID primer tabel tahsin kamu
-    $data = \App\Models\Ujiantahsin::findOrFail($id);
-    
-    // Hapus data
-    $data->delete();
-
-    // Kembalikan ke halaman sebelumnya dengan pesan sukses
-    return redirect()->route('tahsin')->with('success', 'Data Ujian Tahsin berhasil dihapus!');
-}
 // ================================================ REMEDIAL ==========================================================
 
 public function remedial()
@@ -333,6 +345,60 @@ public function remedialUpdateInline(Request $request)
     
     return response()->json(['success' => false, 'message' => 'Data gagal ditemukan.'], 404);
 }
+
+public function remedialEdit($id)
+    {
+        // Pastikan nama Model sesuai (Remedial atau Ujianremedial)
+        $remedial = \App\Models\Remedial::findOrFail($id);
+        
+        // Jika perlu data mahasiswi untuk dropdown (opsional, tergantung view)
+        $mahasiswi = \App\Models\Mahasiswi::all(); 
+
+        $data = [
+            'title'     => 'Edit Data Remedial',
+            'remedial'  => $remedial,
+            'mahasiswi' => $mahasiswi
+        ];
+
+        // Pastikan Anda sudah membuat file view ini: resources/views/ujian/remedial/edit.blade.php
+        return view('ujian.tahfidz.remedialedit', $data);
+    }
+
+    // Function untuk Update data Remedial (Pasti Anda butuh ini setelah form disubmit)
+    // --- UPDATE CONTROLLER: remedialUpdate ---
+    public function remedialUpdate(\Illuminate\Http\Request $request, $id)
+    {
+        // 1. Validasi: Pastikan user memilih nilai (tidak boleh kosong)
+        $request->validate([
+            'nilai_remedial' => 'required', 
+        ]);
+
+        // 2. Cari data berdasarkan ID
+        // Pastikan Model yang digunakan adalah 'Remedial' (sesuai file model Anda)
+        $remedial = \App\Models\Remedial::findOrFail($id);
+
+        // 3. Update Data
+        $remedial->nilai_remedial = $request->nilai_remedial;
+
+        // 4. Simpan ke Database
+        $remedial->save();
+
+        // 5. Redirect kembali ke halaman Index Remedial
+        return redirect()->route('remedial')->with('success', 'Nilai Remedial berhasil diperbarui!');
+    }
+
+    // --- DELETE CONTROLLER: remedialDestroy ---
+    public function remedialDestroy($id)
+    {
+        // 1. Cari data yang mau dihapus
+        $remedial = \App\Models\Remedial::findOrFail($id);
+        
+        // 2. Hapus data
+        $remedial->delete();
+
+        // 3. Kembali ke halaman remedial dengan pesan sukses
+        return redirect()->route('remedial')->with('success', 'Data Remedial berhasil dihapus!');
+    }
     
 }
 

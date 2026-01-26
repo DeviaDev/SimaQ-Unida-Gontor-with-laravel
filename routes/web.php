@@ -157,7 +157,10 @@ Route::prefix('mandiri')->group(function () {
 Route::prefix('tahfidz/remedial')->group(function () {
     // Ini untuk halaman utama remedial
     Route::get('/', [UjianController::class, 'remedial'])->name('remedial'); 
-    
+    Route::get('/edit/{id}', [UjianController::class, 'remedialEdit'])->name('remedialEdit');
+    Route::post('/update/{id}', [UjianController::class, 'remedialUpdate'])->name('remedialUpdate');
+    Route::delete('/tahfidz/remedial/destroy/{id}', [UjianController::class, 'remedialDestroy'])->name('remedialDestroy');
+
     // Ini untuk export
     Route::get('/export-excel', [UjianController::class, 'remedialExportExcel'])->name('remedialExportExcel');
     Route::get('/export-pdf', [UjianController::class, 'remedialExportPdf'])->name('remedialExportPdf');
@@ -179,7 +182,7 @@ Route::prefix('tahsin')->group(function () {
     Route::post('/store', [UjianController::class, 'storeTahsin'])->name('tahsinStore');
     Route::get('/edit/{id_tahsin}', [UjianController::class, 'editTahsin'])->name('tahsinEdit');
     Route::post('/update/{id_tahsin}', [UjianController::class, 'updateTahsin'])->name('tahsinUpdate');
-    Route::delete('/destroy/{id_tahsin}', [UjianController::class, 'destroyTahsin'])->name('tahsinDestroy');
+    Route::get('/destroy/{id_tahsin}', [UjianController::class, 'destroyTahsin'])->name('tahsinDestroy');
     Route::get('/export-excel', [UjianController::class, 'exportExcel'])->name('tahsinExportExcel');
     Route::get('/export-pdf', [UjianController::class, 'exportPdf'])->name('tahsinExportPdf');
 });
