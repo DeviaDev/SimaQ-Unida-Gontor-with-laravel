@@ -90,9 +90,6 @@
             <div id="collapseTahsin" class="collapse" aria-labelledby="headingTahsin" data-parent="#collapseTwo">
     <div class="bg-white py-2 collapse-inner rounded">
         <a class="collapse-item {{ $tilawahmahasiswi ?? '' }}" href="{{ route('absensiTilawahMahasiswi') }}">Mahasiswi</a>
-        <a class="collapse-item {{ $tilawahmuhafidzoh ?? '' }}" href="{{ route('absensiTilawahMuhafidzoh') }}">Muhafidzoh</a>
-        <a class="collapse-item {{ $tilawahstaf ?? '' }}" href="{{ route('absensiTilawahStaf') }}">Staf/Tendik</a>
-        <a class="collapse-item {{ $tilawahdosen ?? '' }}" href="{{ route('absensiTilawahDosen') }}">Dosen</a>
     </div>
             </div>
 
@@ -112,11 +109,9 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Kegiatan:</h6>
-                        <a class="collapse-item {{ $pengurusLailatu ?? ''}}" href="{{ route('pengurusLailatu') }}">Malam Lailatu Tahfidz</a>
+                        
+                        <a class="collapse-item" href="{{ route('laporan.index') }}">Absensi Kegiatan</a>
                         <a class="collapse-item {{ $pengurusTilawah ?? ''}}" href="{{ route('pengurusTilawah') }}">Tilawah</a>
-                        <a class="collapse-item {{ $pengurusTaujihat ?? ''}}" href="{{ route('pengurusTaujihat') }}">Taujihat</a>
-
-
                     </div>
                 </div>
             </li>
@@ -150,25 +145,6 @@
 </li>
 
 
-
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                ARSIP
-            </div>
-
-            <!-- Nav Item - Charts -->
-            <li class="nav-item {{ $menuDokumentasi ?? ''}}">
-                <a class="nav-link" href="{{ route('dokumentasi') }}">
-                    <i class="fas fa-fw fa-link"></i>
-                    <span>Documentation</span></a>
-            </li>
-
-            
-        
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
 

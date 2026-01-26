@@ -12,13 +12,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class MahasiswiImport implements ToModel, WithHeadingRow
 {
-    /**
-     * Header Excel berada di baris ke-2
-     */
-    public function headingRow(): int
-    {
-        return 2;
-    }
+
 
     public function model(array $row)
     {
@@ -38,13 +32,13 @@ class MahasiswiImport implements ToModel, WithHeadingRow
         $kelompok = KelompokLT::where('kode_kelompok', $normalized['kelompok'] ?? null)->first();
         $tempat = Tempat::where('nama_tempat', $normalized['tempat'] ?? null)->first();
         $muhafidzoh = Muhafidzoh::where('nama_muhafidzoh', $normalized['nama_muhafidzoh'] ?? null)->first();
-        $dosen = Dosen::where('nama_dosen', $normalized['dosen_pembimbing'] ?? $normalized['nama_dosen'] ?? null)->first();
+        $dosen = Dosen::where('nama_dosen', $normalized['nama_dosen'] ?? $normalized['nama_dosen'] ?? null)->first();
 
         // Simpan data mahasiswi baru
         return new Mahasiswi([
     'nama_mahasiswi' => $normalized['nama_mahasiswi'] ?? null,
-    'prodi'          => $normalized['program_studi'] ?? '-', // default kalau kosong
-    'semester'       => $normalized['semester'] ?? 1, // default semester 1
+    'prodi'          => $normalized['prodi'] ?? '-', // default kalau kosong
+    'semester'       => $normalized['semester'] ?? '-', // default semester 1
     'id_muhafidzoh'  => $muhafidzoh->id_muhafidzoh ?? null,
     'id_kelompok'    => $kelompok->id_kelompok ?? null,
     'id_tempat'      => $tempat->id_tempat ?? null,
