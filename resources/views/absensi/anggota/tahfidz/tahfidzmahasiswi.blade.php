@@ -294,14 +294,14 @@
                 <div class="d-flex justify-content-end mt-3">
                     {{-- Tambahkan data-toggle dan data-target --}}
                     <button type="button" 
-                            class="btn btn-sm btn-success mr-2" 
+                            class="btn btn-sm btn-primary mr-2" 
                             data-toggle="modal" 
                             data-target="#modalExport">
                         <i class="fas fa-file-word mr-1"></i></i> Export
                     </button>
                     <button
                         type="button"
-                        class="btn btn-sm btn-primary btn-push">
+                        class="btn btn-sm btn-success btn-push">
                         <i class="fas fa-level-down-alt mr-1"></i>
                         Push ke Pertemuan
                     </button>

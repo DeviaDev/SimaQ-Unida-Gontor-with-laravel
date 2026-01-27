@@ -94,7 +94,7 @@
                 <i class="fas fa-trophy mr-1"></i> Leaderboard Tilawah Pengurus
             </h6>
             
-            <button type="button" class="btn btn-sm btn-success shadow-sm" data-toggle="modal" data-target="#modalExport">
+            <button type="button" class="btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#modalExport">
                 <i class="fas fa-file-word mr-1"></i> Export Laporan
             </button>
         </div>

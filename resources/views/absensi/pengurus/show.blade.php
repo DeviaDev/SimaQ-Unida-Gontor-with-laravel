@@ -88,10 +88,10 @@
             {{-- Tombol Simpan Bawah (Tetap Ada) --}}
             <div class="card-footer text-right">
                 {{-- ✅ BUTTON EXPORT (Menggantikan Simpan Atas) --}}
-                <a href="{{ route('laporan.export', $kegiatan->id) }}" class="btn btn-success btn-sm font-weight-bold">
+                <a href="{{ route('laporan.export', $kegiatan->id) }}" class="btn btn-primary btn-sm font-weight-bold">
                     <i class="fas fa-file-word mr-1"></i> Export Absensi
                 </a>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-success">
                     <i class="fas fa-save mr-1"></i> Simpan Perubahan Absensi
                 </button>
             </div>

@@ -205,7 +205,7 @@
                         <small class="text-muted font-italic mr-3">
                             *Pilih filter di atas untuk input data (Edit).
                         </small>
-                        <button type="button" class="btn btn-sm btn-success mr-3 shadow-sm" data-toggle="modal" data-target="#modalExport">
+                        <button type="button" class="btn btn-sm btn-primary mr-3 shadow-sm" data-toggle="modal" data-target="#modalExport">
                             <i class="fas fa-file-word mr-1"></i> Export Docx
                         </button>
                     </div>

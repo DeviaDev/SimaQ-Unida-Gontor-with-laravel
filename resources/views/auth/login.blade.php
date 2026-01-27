@@ -24,7 +24,11 @@
 
 </head>
 
-<body background="sbadmin2/img/bg1.jpg" >
+<body style="
+    background: url('sbadmin2/img/bg1.jpg') no-repeat center center fixed;
+    background-size: cover;
+">
+
 
     <div class="container">
 
