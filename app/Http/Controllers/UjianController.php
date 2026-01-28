@@ -158,17 +158,21 @@ class UjianController extends Controller
     // app/Http/Controllers/UjianController.php
 
 public function tahsin(Request $request) {
-    $role = $request->query('role');
-    $query = \App\Models\Ujiantahsin::with('mahasiswi');
+    // 1. Ambil role dari URL. Jika kosong, Default-nya 'Mahasiswi'
+    // Jadi pas pertama buka, langsung rapi filter Mahasiswi, gak campur aduk.
+    $role = $request->query('role', 'Mahasiswi'); 
 
+    // 2. Siapkan Query dengan memuat relasi Mahasiswi DAN Dosen
+    $query = \App\Models\Ujiantahsin::with(['mahasiswi', 'dosen', 'muhafidzoh']);
+    // 3. Filter Query berdasarkan Kategori
     if ($role) {
         $query->where('kategori', $role);
     }
 
     $data = [
-        'title'      => 'Data Ujian Tahsin',
-        'tahsinData' => $query->get(), // HARUS 'tahsinData' agar sesuai Blade
-        'currentRole' => $role,
+        'title'       => 'Data Ujian Tahsin',
+        'tahsinData'  => $query->get(), // Ambil data yang sudah difilter
+        'currentRole' => $role,         // Kirim info role ke view biar tombolnya bisa warna-warni
     ];
 
     return view('ujian.tahsin.tahsin', $data);
@@ -176,21 +180,28 @@ public function tahsin(Request $request) {
 
     public function createTahsin(Request $request) 
 {
-    $role = $request->query('role');
+    // 1. Ambil role dari URL (Default: Mahasiswi)
+    $role = $request->query('role', 'Mahasiswi');
 
-    // Jika Mahasiswi, ambil dari tabel Mahasiswi
-    // Jika Dosen, ambil dari tabel Dosen (atau sesuaikan dengan struktur tabelmu)
+    // 2. LOGIKA PENGAMBILAN DATA PESERTA
     if ($role == 'Dosen') {
-        $peserta = \App\Models\Dosen::all(); // Contoh jika ada tabel dosen
-    } elseif ($role == 'Mahasiswi') {
-        $peserta = \App\Models\Mahasiswi::all();
+        $peserta = \App\Models\Dosen::all(); 
+        
+    } elseif ($role == 'Muhafidzoh') {
+        // --- BAGIAN INI YANG KITA UPDATE ---
+        // Pastikan Model Muhafidzoh sudah ada. 
+        // Jika belum, buat dulu via terminal: php artisan make:model Muhafidzoh
+        $peserta = \App\Models\Muhafidzoh::all(); 
+        
     } else {
-        $peserta = \App\Models\Mahasiswi::all(); // Default
+        // Default: Mahasiswi
+        $peserta = \App\Models\Mahasiswi::all(); 
     }
 
     $data = [
-        'title' => 'Tambah Ujian Tahsin',
-        'mahasiswi' => $peserta,
+        'title'     => 'Tambah Ujian Tahsin',
+        'mahasiswi' => $peserta, // Variabel ini sekarang bisa berisi data Muhafidzoh
+        'role'      => $role,
     ];
 
     return view('ujian.tahsin.createtahsin', $data);
@@ -200,105 +211,150 @@ public function tahsin(Request $request) {
 
 public function storeTahsin(Request $request) 
 {
-    // Kembali ke kode awal tanpa otomatisasi remedial
-    $tahsin = new \App\Models\Ujiantahsin();
-    $tahsin->id_mahasiswi = $request->id_mahasiswi;
-    $tahsin->materi       = $request->materi;
-    $tahsin->nilai        = $request->nilai;
-    $tahsin->save();
-
-    return redirect()->route('tahsin')->with('success', 'Data Tahsin Berhasil Disimpan!');
-}
-
-    public function editTahsin($id_tahsin)
-    {
-        $tahsin = \App\Models\Ujiantahsin::findOrFail($id_tahsin);
-        $mahasiswi = \App\Models\Mahasiswi::all();
-
-        $data = [
-            'title'     => 'Edit Data Ujian Tahsin',
-            'tahsin'    => $tahsin,
-            'mahasiswi' => $mahasiswi,
-        ];
-
-        
-        return view('ujian.tahsin.edittahsin', $data); // Baris 226
-    }
-
-    public function updateTahsin(Request $request, $id_tahsin)
-{
-    // 1. Validasi Input (Mencegah data kosong/invalid masuk DB)
+    // 1. Validasi
     $request->validate([
-        'id_mahasiswi' => 'required|exists:mahasiswi,id_mahasiswi', // Pastikan mahasiswi ada
-        'prodi'        => 'nullable|string',
-        'semester'     => 'nullable|numeric',
-        'materi'       => 'required|string',
-        'nilai'        => 'nullable|in:A,A-,B+,B,C+,C,C-', // Batasi nilai sesuai opsi
+        'id_mahasiswi' => 'required',
+        'materi'       => 'required',
+        'nilai'        => 'required',
     ]);
 
-    // 2. Ambil data lama
-    $tahsin = \App\Models\Ujiantahsin::findOrFail($id_tahsin);
-
-    // 3. Update SEMUA field, bukan hanya nilai
+    // 2. Simpan Data
+    $tahsin = new \App\Models\Ujiantahsin();
+    
+    // Simpan ID (bisa id mahasiswi/dosen/muhafidzoh)
     $tahsin->id_mahasiswi = $request->id_mahasiswi;
-    $tahsin->prodi        = $request->prodi;
-    $tahsin->semester     = $request->semester;
+    
+    // Simpan Prodi (Teks aman, strip boleh masuk)
+    $tahsin->prodi = $request->prodi;
+
+    // --- PERBAIKAN DI SINI ---
+    // Logika: Jika semester isinya strip (-) atau bukan angka, ubah jadi 0
+    if ($request->semester == '-' || !is_numeric($request->semester)) {
+        $tahsin->semester = 0; 
+    } else {
+        $tahsin->semester = $request->semester;
+    }
+    // -------------------------
+
+    $tahsin->kategori     = $request->kategori;
     $tahsin->materi       = $request->materi;
     $tahsin->nilai        = $request->nilai;
     
     $tahsin->save();
 
-    if (in_array($request->nilai, ['C', 'C-'])) {
-        
-        \App\Models\Remedial::updateOrCreate(
-            // Kunci pencarian (agar tidak duplikat)
-            // PENTING: Gunakan $tahsin->id_tahsin (sesuai struktur tabel Anda), bukan ->id
-            ['id_tahsin' => $tahsin->id_tahsin], 
-            
-            // Data yang akan diupdate atau dibuat baru
-            [
-                'id_mahasiswi' => $tahsin->id_mahasiswi,
-                'materi'       => $tahsin->materi,
-                'status'       => 'Wajib Remedial'
-            ]
-        );
+    // 3. REDIRECT KEMBALI KE FORM
+    $currentRole = $request->kategori; 
+
+    return redirect()->route('tahsinCreate', ['role' => $currentRole])
+                     ->with('success', 'Data berhasil disimpan! Silakan input data berikutnya.');
+}
+
+    public function editTahsin($id)
+{
+    // 1. Ambil Data Ujian yang mau diedit
+    $item = \App\Models\Ujiantahsin::findOrFail($id);
+
+    // 2. Cek Kategorinya apa? (Dosen, Mahasiswi, atau Muhafidzoh)
+    $kategori = $item->kategori; 
+
+    // 3. Ambil List Peserta Sesuai Kategori
+    if ($kategori == 'Dosen') {
+        $peserta = \App\Models\Dosen::all();
+    } elseif ($kategori == 'Muhafidzoh') {
+        $peserta = \App\Models\Muhafidzoh::all();
     } else {
-        
-
-    return redirect()->route('tahsin')->with('success', 'Data berhasil diperbarui!');
-}
-}
-
-        public function destroyTahsin($id_tahsin)
-            {
-                // Cari data berdasarkan ID, kalau ketemu langsung hapus
-                $tahsin = \App\Models\Ujiantahsin::findOrFail($id_tahsin);
-                $tahsin->delete();
-
-                // Balik ke tabel dengan pesan sukses
-                return redirect()->route('tahsin')->with('success', 'Data Tahsin Berhasil Dihapus!');
-            }
-
-    public function exportExcel() {
-    return Excel::download(new TahsinExport, 'data-tahsin.xlsx');
+        // Default: Mahasiswi
+        $peserta = \App\Models\Mahasiswi::all();
     }
 
-    public function exportPdf() 
-{
-    // 1. Ambil data dari database
-    $tahsinData = \App\Models\Ujiantahsin::with('mahasiswi')->get();
-    
-    // 2. Panggil view pdftahsin.blade.php (Pastikan foldernya benar)
-    // Jika file ada di resources/views/ujian/tahsin/pdftahsin.blade.php
-    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('ujian.tahsin.pdftahsin', compact('tahsinData'));
-    
-    // 3. Set ukuran kertas (Opsional, tapi bagus untuk KOP surat)
-    $pdf->setPaper('a4', 'portrait');
-
-    // 4. Download file
-    return $pdf->download('Data-Ujian-Tahsin.pdf');
+    // 4. Kirim data ke View
+    return view('ujian.tahsin.edittahsin', [
+        'title'   => 'Edit Data Ujian Tahsin',
+        'item'    => $item,    // Data ujian yang sedang diedit
+        'peserta' => $peserta, // List nama (bisa dosen/mahasiswi/muhafidzoh)
+        'role'    => $kategori // Kirim kategori biar view tau cara nampilinnya
+    ]);
 }
 
+    public function updateTahsin(Request $request, $id)
+{
+    $tahsin = \App\Models\Ujiantahsin::findOrFail($id);
+
+    $tahsin->id_mahasiswi = $request->id_mahasiswi;
+    $tahsin->prodi        = $request->prodi;
+    
+    // --- LOGIKA SEMESTER (Agar tidak error database) ---
+    if ($request->semester == '-' || !is_numeric($request->semester)) {
+        $tahsin->semester = 0;
+    } else {
+        $tahsin->semester = $request->semester;
+    }
+    // ---------------------------------------------------
+
+    $tahsin->materi       = $request->materi;
+    $tahsin->nilai        = $request->nilai;
+    // Kategori tidak perlu diupdate karena sudah hidden input, tapi kalau mau aman:
+    // $tahsin->kategori = $request->kategori; 
+    
+    $tahsin->save();
+
+    return redirect()->route('tahsin', ['role' => $tahsin->kategori])
+                     ->with('success', 'Data berhasil diperbarui!');
+}
+
+
+        public function destroyTahsin($id)
+{
+    // 1. Cari data yang mau dihapus
+    $item = \App\Models\Ujiantahsin::findOrFail($id);
+
+    // 2. CATAT KATEGORINYA DULU (Penting!)
+    // Kita simpan info kategori (Dosen/Muhafidzoh/Mahasiswi) ke variabel $role
+    $role = $item->kategori;
+
+    // 3. Baru hapus datanya
+    $item->delete();
+
+    // 4. Redirect kembali dengan membawa parameter ROLE
+    // Sehingga saat halaman reload, tab yang aktif sesuai dengan $role tadi
+    return redirect()->route('tahsin', ['role' => $role])
+                     ->with('success', 'Data berhasil dihapus!');
+}
+
+    public function exportExcel(Request $request) 
+{
+    // 1. Ambil Role dari URL (dikirim oleh script JS tadi)
+    $role = $request->query('role', 'Mahasiswi');
+
+    // 2. Download Excel
+    // Kita kirim variabel $role ke dalam class TahsinExport
+    return \Maatwebsite\Excel\Facades\Excel::download(
+        new \App\Exports\TahsinExport($role), 
+        'Data-Ujian-'.$role.'.xlsx'
+    );
+}
+
+    public function exportPdf(Request $request) 
+{
+    // 1. Tangkap Role dari Script tadi
+    $role = $request->query('role', 'Mahasiswi');
+
+    // 2. Filter Query
+    $query = \App\Models\Ujiantahsin::with(['mahasiswi', 'dosen']);
+    
+    if ($role) {
+        $query->where('kategori', $role);
+    }
+
+    $data = $query->get();
+    
+    // 3. Generate PDF
+    // Pastikan view 'pdftahsin' nanti logic namanya juga sudah benar (pakai if dosen/mahasiswi)
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('ujian.tahsin.pdftahsin', ['tahsinData' => $data, 'role' => $role]);
+    $pdf->setPaper('a4', 'portrait');
+
+    return $pdf->download('Data-Ujian-'.$role.'.pdf');
+}
 // ================================================ REMEDIAL ==========================================================
 
 public function remedial()

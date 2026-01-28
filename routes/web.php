@@ -43,8 +43,24 @@ Route::get('/admin/user/pdf', [UserController::class, 'pdf'])->name('userPdf');
 
 
 
+
 //DATA
 Route::get('index', [DataController::class,'index'])->name('index');
+
+    // Ujian Tahsin
+Route::prefix('tahsin')->group(function () {
+    Route::get('/', [UjianController::class, 'tahsin'])->name('tahsin');
+    Route::get('/create', [UjianController::class, 'createTahsin'])->name('tahsinCreate');
+    Route::post('/store', [UjianController::class, 'storeTahsin'])->name('tahsinStore');
+    Route::get('/edit/{id_tahsin}', [UjianController::class, 'editTahsin'])->name('tahsinEdit');
+    
+    // --- PERBAIKAN: Ganti 'post' menjadi 'put' ---
+    Route::put('/update/{id_tahsin}', [UjianController::class, 'updateTahsin'])->name('tahsinUpdate');
+    
+    Route::delete('/destroy/{id_tahsin}', [UjianController::class, 'destroyTahsin'])->name('tahsinDestroy');
+    Route::get('/export-excel', [UjianController::class, 'exportExcel'])->name('tahsinExportExcel');
+    Route::get('/export-pdf', [UjianController::class, 'exportPdf'])->name('tahsinExportPdf');
+});
 
 
 //dosen
@@ -175,17 +191,21 @@ Route::post('/tahfidz/remedial/update-inline', [UjianController::class, 'remedia
 });
 
 // Ujian Tahsin
-// Perbaikan: Memastikan Route::get('tahsin') tidak duplikat di luar group
-Route::prefix('tahsin')->group(function () {
-    Route::get('/', [UjianController::class, 'tahsin'])->name('tahsin');
-    Route::get('/create', [UjianController::class, 'createTahsin'])->name('tahsinCreate');
-    Route::post('/store', [UjianController::class, 'storeTahsin'])->name('tahsinStore');
-    Route::get('/edit/{id_tahsin}', [UjianController::class, 'editTahsin'])->name('tahsinEdit');
-    Route::post('/update/{id_tahsin}', [UjianController::class, 'updateTahsin'])->name('tahsinUpdate');
-    Route::get('/destroy/{id_tahsin}', [UjianController::class, 'destroyTahsin'])->name('tahsinDestroy');
-    Route::get('/export-excel', [UjianController::class, 'exportExcel'])->name('tahsinExportExcel');
-    Route::get('/export-pdf', [UjianController::class, 'exportPdf'])->name('tahsinExportPdf');
-});
+    Route::prefix('tahsin')->group(function () {
+        Route::get('/', [App\Http\Controllers\UjianController::class, 'tahsin'])->name('tahsin');
+        Route::get('/create', [App\Http\Controllers\UjianController::class, 'createTahsin'])->name('tahsinCreate');
+        Route::post('/store', [App\Http\Controllers\UjianController::class, 'storeTahsin'])->name('tahsinStore');
+        Route::get('/edit/{id_tahsin}', [App\Http\Controllers\UjianController::class, 'editTahsin'])->name('tahsinEdit');
+        
+        // Pastikan ini PUT
+        Route::put('/update/{id_tahsin}', [App\Http\Controllers\UjianController::class, 'updateTahsin'])->name('tahsinUpdate');
+        
+        // Pastikan ini DELETE
+        Route::delete('/destroy/{id_tahsin}', [App\Http\Controllers\UjianController::class, 'destroyTahsin'])->name('tahsinDestroy');
+        
+        Route::get('/export-excel', [App\Http\Controllers\UjianController::class, 'exportExcel'])->name('tahsinExportExcel');
+        Route::get('/export-pdf', [App\Http\Controllers\UjianController::class, 'exportPdf'])->name('tahsinExportPdf');
+    });
 
 // Dokumentasi
 Route::get('dokumentasi', [DokumentasiController::class,'dokumentasi'])->name('dokumentasi');
