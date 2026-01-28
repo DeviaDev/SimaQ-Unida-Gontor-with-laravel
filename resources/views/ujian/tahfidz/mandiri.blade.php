@@ -3,14 +3,14 @@
 @section('content')
 <h1 class="h3 mb-4 text-gray-800">
     <i class="fas fa-user mr-2"></i>
-    {{ $title }}
+    {{ $title  }}
 </h1>
 
 <div class="card">
     <div class="card-header d-flex flex-wrap justify-content-center justify-content-xl-between">
         <div class="mb-1 mr-2">
             <a href="{{ route('mandiriCreate') }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus mr-2"></i> Add Ujian
+                <i class="fas fa-plus mr-2"></i> Add Data Ujian
             </a>
         </div>
         <div class="mr-1">
@@ -86,7 +86,7 @@
             @method('DELETE')
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">Hapus Data Ujian Mandiri?</h5>
+                    <h5 class="modal-title">Hapus Data Ujian?</h5>
                     <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
