@@ -3,6 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\Mahasiswi;   // ✅ Pakai Model Baru
+use App\Models\Muhafidzoh;  // ✅ Pakai Model Baru
+use App\Models\KelompokLT;  // ✅ Tambah Model Kelompok
+use App\Models\Tempat;      // ✅ Tambah Model Tempat (untuk Gedung)
+use App\Models\Mahatilawah;
 
 class AbsensiAnggotaController extends Controller
 {
@@ -14,28 +20,82 @@ class AbsensiAnggotaController extends Controller
         //
     }
 
+    public function absensiTahfidzMahasiswi(Request $request)
+    {
+        // 1. Gunakan Model Mahasiswi yang baru
+        $query = Mahasiswi::query();
 
-    public function absensiTahfidzMahasiswi(){
-        $data = array(
-            'title'         => 'Absensi Tahfidz Mahasiswi',
+        if ($request->filled('prodi')) {
+            $query->where('prodi', $request->prodi);
+        }
+
+        if ($request->filled('semester')) {
+            $query->where('semester', $request->semester);
+        }
+
+        if ($request->filled('kelompok')) {
+            // ✅ Filter berdasarkan id_kelompok (bukan string 'kelompok')
+            $query->where('id_kelompok', $request->kelompok);
+        }
+
+        // Ambil data beserta relasi kelompok agar namanya muncul
+        $mahasiswi = $query->with('kelompok')->orderBy('nama_mahasiswi')->get();
+
+        // 2. Perbaiki Logika List Kelompok (Agar return Object, bukan String)
+        $kelompokList = [];
+
+        if ($request->filled('prodi') && $request->filled('semester')) {
+            // Ambil data dari tabel kelompok_lt yang memiliki mahasiswa di prodi/smt tersebut
+            $kelompokList = KelompokLT::whereHas('mahasiswi', function($q) use ($request) {
+                $q->where('prodi', $request->prodi)
+                  ->where('semester', $request->semester);
+            })
+            ->orderBy('kode_kelompok')
+            ->get(); 
+            // 👆 Pakai get() agar hasilnya Object, jadi di Blade bisa panggil $k->id_kelompok
+        }
+
+        return view('absensi.anggota.tahfidz.tahfidzmahasiswi', [
+            'title' => 'Absensi Tahfidz Mahasiswi',
+            'mahasiswi' => $mahasiswi,
             'menuAbsensiAnggota' => 'active',
             'menuAbsensiTahfidz' => 'active',
             'tahfidzmahasiswi' => 'active',
-        );
-        return view('absensi.anggota.tahfidz.tahfidzmahasiswi
-',$data);
+            'kelompokList' => $kelompokList
+        ]);
     }
 
-    public function absensiTahfidzMuhafidzoh(){
-        $data = array(
-            'title'         => 'Absensi Tahfidz Muhafidzoh',
+    public function absensiTahfidzMuhafidzoh(Request $request)
+    {
+        // Gunakan Model Muhafidzoh dengan relasi Tempat & Kelompok
+        $query = Muhafidzoh::with(['tempat', 'kelompok']);
+
+        // 🔎 Filter GEDUNG (Via Relasi Tempat)
+        if ($request->filled('gedung')) {
+            // Karena 'gedung' ada di tabel 'tempat' (kolom nama_tempat)
+            $query->whereHas('tempat', function($q) use ($request) {
+                $q->where('nama_tempat', $request->gedung);
+            });
+        }
+
+        // Data utama (Order by nama_muhafidzoh)
+        $muhafidzoh = $query->orderBy('nama_muhafidzoh')->get();
+
+        // Dropdown daftar gedung (Ambil dari tabel Tempat)
+        $gedungList = Tempat::select('nama_tempat')
+            ->distinct()
+            ->orderBy('nama_tempat')
+            ->pluck('nama_tempat');
+
+        return view('absensi.anggota.tahfidz.tahfidzmuhafidzoh', [
+            'title' => 'Absensi Tahfidz Muhafidzoh',
+            'muhafidzoh' => $muhafidzoh,
             'menuAbsensiAnggota' => 'active',
             'menuAbsensiTahfidz' => 'active',
             'tahfidzmuhafidzoh' => 'active',
-        );
-        return view('absensi/anggota/tahfidz/tahfidzmuhafidzoh',$data);
+            'gedungList' => $gedungList,
+        ]);
     }
-
 
     public function absensiTilawahMahasiswi(){
         $data = array(

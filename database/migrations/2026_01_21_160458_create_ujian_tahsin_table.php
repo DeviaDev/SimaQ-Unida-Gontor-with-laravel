@@ -6,28 +6,29 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('remedials', function (Blueprint $table) {
-            $table->id();
-
+        Schema::create('ujian_tahsin', function (Blueprint $table) {
+            $table->bigIncrements('id_tahsin');
             $table->unsignedBigInteger('id_mahasiswi');
             $table->string('prodi')->nullable();
-            $table->string('semester')->nullable();
+            $table->integer('semester')->nullable();
             $table->string('kategori')->nullable();
             $table->string('materi');
-            $table->string('nilai'); // Nilai asli C/C-
+            $table->string('nilai')->nullable();
+            $table->string('keterangan_ujian')->nullable();
             $table->timestamps();
-
-            $table->foreign('id_mahasiswi')
-                ->references('id_mahasiswi')
-                ->on('mahasiswi')
-                ->onDelete('cascade');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('remedials');
+        Schema::dropIfExists('ujian_tahsin');
     }
 };

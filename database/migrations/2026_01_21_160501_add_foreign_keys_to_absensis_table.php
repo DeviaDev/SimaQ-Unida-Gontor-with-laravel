@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pengurus', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama');
-            $table->string('email')->unique();
-            $table->string('foto')->nullable();
-            $table->timestamps();
+        Schema::table('absensis', function (Blueprint $table) {
+            $table->foreign(['id_mahasiswi'], 'fk_absensis_mahasiswi')->references(['id_mahasiswi'])->on('mahasiswi')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengurus');
+        Schema::table('absensis', function (Blueprint $table) {
+            $table->dropForeign('fk_absensis_mahasiswi');
+        });
     }
 };
